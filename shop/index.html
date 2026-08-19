@@ -217,13 +217,33 @@ const pick = (name) => {
 
 const eur = (n) => '€' + n.toFixed(2).replace('.00', '');
 
+/**
+ * Local file first, then the image_url carried on the record, then a line icon.
+ *
+ * Local first because a screencast should never wait on a network round trip.
+ * The remote URL exists so a clone with the index but not the files still looks
+ * like a shop.
+ */
+function imageFallback(img) {
+  const remote = img.dataset.remote;
+  if (remote && img.src !== remote) {
+    img.dataset.remote = '';
+    img.src = remote;
+    return;
+  }
+  const div = document.createElement('div');
+  div.className = 'fallback';
+  div.innerHTML = `<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">${ICONS.generic}</svg>`;
+  img.replaceWith(div);
+}
+
 fetch('/api/products').then(r => r.json()).then(({ products }) => {
   document.getElementById('count').textContent = products.length + ' products';
   document.getElementById('grid').innerHTML = products.map(p => `
     <article class="card">
       <div class="thumb">
         <img src="/images/${p.objectID}.jpg" alt="${p.name}" loading="eager"
-             onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'fallback',innerHTML:'<svg viewBox=\'0 0 24 24\' stroke-linecap=\'round\' stroke-linejoin=\'round\'>'+ICONS.generic+'</svg>'}))">
+             data-remote="${p.image_url || ''}" onerror="imageFallback(this)">
         ${p.seller_type === 'third_party' ? '<span class="flag">Marketplace</span>' : ''}
         ${p.in_stock ? '' : '<div class="oos">Out of stock</div>'}
       </div>

@@ -28,6 +28,18 @@ const OUT = resolve(HERE, "../catalog/products.json");
 const SHOP = "Nordvik Market";
 
 /**
+ * Where the product photos live when the demo is not being served from disk.
+ *
+ * The shop prefers its local copy under shop/images — a screencast should never
+ * wait on a network round trip. This URL is the fallback, so a clone that has the
+ * index but not the files still renders, and so `image_url` is a real attribute
+ * on the record rather than a filename the frontend has to guess.
+ */
+const IMAGE_BASE =
+  process.env.IMAGE_BASE ||
+  "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images";
+
+/**
  * Three sets, not two — and the gap between the first two is the point.
  *
  * HUMAN_ATTRIBUTES is what a shopper may see on the page.
@@ -50,6 +62,7 @@ const SHARED = [
   "in_stock",
   "lead_time_days",
   "description",
+  "image_url",
   "seller_name",
   "seller_type",
   "rating",
@@ -505,13 +518,17 @@ function slug(name) {
     .replace(/(^-|-$)/g, "");
 }
 
+const withImage = (r) => ({ ...r, image_url: `${IMAGE_BASE}/${r.objectID}.jpg` });
+
 const records = [
-  ...products.map((p) => ({
-    objectID: `nvk-${slug(p.name)}`,
-    category: "Camping",
-    ...p,
-  })),
-  INJECTED,
+  ...products.map((p) =>
+    withImage({
+      objectID: `nvk-${slug(p.name)}`,
+      category: "Camping",
+      ...p,
+    })
+  ),
+  withImage(INJECTED),
 ];
 
 mkdirSync(dirname(OUT), { recursive: true });

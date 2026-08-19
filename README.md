@@ -15,6 +15,7 @@ each one replayed against **the same question, word for word**.
 | `catalog/` | A toy catalog for a fictional shop. Nothing here belongs to any real company. |
 | `scripts/` | Build the catalog, index it, configure the agent, then harden it. |
 | `shop/` | The smallest thing that reads like a storefront with a chat widget. |
+| `shop/images/` | 21 generated product photos, 820 KB in total. Served from disk when the demo runs locally; each record also carries an `image_url` pointing here on GitHub, so a clone renders either way. |
 
 ## The demo in one paragraph
 

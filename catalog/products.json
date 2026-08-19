@@ -18,6 +18,7 @@
     "in_stock",
     "lead_time_days",
     "description",
+    "image_url",
     "seller_name",
     "seller_type",
     "rating",
@@ -33,6 +34,7 @@
     "in_stock",
     "lead_time_days",
     "description",
+    "image_url",
     "seller_name",
     "seller_type",
     "rating",
@@ -58,7 +60,8 @@
       "max_discount_pct": 15,
       "merch_note": "Hero SKU for autumn. Hold price until 30/11.",
       "vendor_contract_ref": "NVK-FJL-2024-08",
-      "buyer_owner": "category.camping@nordvik.example"
+      "buyer_owner": "category.camping@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-fjellro-2-tent.jpg"
     },
     {
       "objectID": "nvk-fjellro-3-tent",
@@ -78,7 +81,8 @@
       "max_discount_pct": 15,
       "merch_note": "Hold price until 30/11.",
       "vendor_contract_ref": "NVK-FJL-2024-08",
-      "buyer_owner": "category.camping@nordvik.example"
+      "buyer_owner": "category.camping@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-fjellro-3-tent.jpg"
     },
     {
       "objectID": "nvk-kvist-down-sleeping-bag-5-c",
@@ -98,7 +102,8 @@
       "max_discount_pct": 20,
       "merch_note": "Overstocked. Cleared for promotion from 01/10.",
       "vendor_contract_ref": "NVK-KVS-2024-02",
-      "buyer_owner": "category.sleep@nordvik.example"
+      "buyer_owner": "category.sleep@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-kvist-down-sleeping-bag-5-c.jpg"
     },
     {
       "objectID": "nvk-kvist-synthetic-sleeping-bag-0-c",
@@ -118,7 +123,8 @@
       "max_discount_pct": 25,
       "merch_note": "Entry price point. Never discount below EUR 99.",
       "vendor_contract_ref": "NVK-KVS-2024-02",
-      "buyer_owner": "category.sleep@nordvik.example"
+      "buyer_owner": "category.sleep@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-kvist-synthetic-sleeping-bag-0-c.jpg"
     },
     {
       "objectID": "nvk-torvald-trail-stove",
@@ -138,7 +144,8 @@
       "max_discount_pct": 10,
       "merch_note": "Best-selling accessory. Bundle with Fjellro 2 in Q4.",
       "vendor_contract_ref": "NVK-TRV-2023-11",
-      "buyer_owner": "category.cook@nordvik.example"
+      "buyer_owner": "category.cook@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-torvald-trail-stove.jpg"
     },
     {
       "objectID": "nvk-torvald-titanium-pot-set-900-ml",
@@ -158,7 +165,8 @@
       "max_discount_pct": 10,
       "merch_note": "Thin stock until week 42.",
       "vendor_contract_ref": "NVK-TRV-2023-11",
-      "buyer_owner": "category.cook@nordvik.example"
+      "buyer_owner": "category.cook@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-torvald-titanium-pot-set-900-ml.jpg"
     },
     {
       "objectID": "nvk-halden-38l-backpack",
@@ -178,7 +186,8 @@
       "max_discount_pct": 20,
       "merch_note": "Colourway 'Slate' discontinued — sell through before restock.",
       "vendor_contract_ref": "NVK-HLD-2024-05",
-      "buyer_owner": "category.carry@nordvik.example"
+      "buyer_owner": "category.carry@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-halden-38l-backpack.jpg"
     },
     {
       "objectID": "nvk-halden-65l-trekking-pack",
@@ -198,7 +207,8 @@
       "max_discount_pct": 15,
       "merch_note": "Out of stock — container delayed, ETA week 44. Do not promise dates.",
       "vendor_contract_ref": "NVK-HLD-2024-05",
-      "buyer_owner": "category.carry@nordvik.example"
+      "buyer_owner": "category.carry@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-halden-65l-trekking-pack.jpg"
     },
     {
       "objectID": "nvk-aurland-insulated-jacket",
@@ -218,7 +228,8 @@
       "max_discount_pct": 25,
       "merch_note": "Markdown candidate if sell-through under 40% by week 45.",
       "vendor_contract_ref": "NVK-AUR-2024-03",
-      "buyer_owner": "category.apparel@nordvik.example"
+      "buyer_owner": "category.apparel@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-aurland-insulated-jacket.jpg"
     },
     {
       "objectID": "nvk-aurland-rain-shell",
@@ -238,7 +249,8 @@
       "max_discount_pct": 25,
       "merch_note": "Returns rate 11% — sizing runs small, flag on PDP.",
       "vendor_contract_ref": "NVK-AUR-2024-03",
-      "buyer_owner": "category.apparel@nordvik.example"
+      "buyer_owner": "category.apparel@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-aurland-rain-shell.jpg"
     },
     {
       "objectID": "nvk-selje-trekking-poles",
@@ -258,7 +270,8 @@
       "max_discount_pct": 20,
       "merch_note": "Strong attach rate with Halden 65L.",
       "vendor_contract_ref": "NVK-SLJ-2023-09",
-      "buyer_owner": "category.carry@nordvik.example"
+      "buyer_owner": "category.carry@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-selje-trekking-poles.jpg"
     },
     {
       "objectID": "nvk-selje-headlamp-400",
@@ -278,7 +291,8 @@
       "max_discount_pct": 15,
       "merch_note": "Basket-builder. Keep in checkout cross-sell.",
       "vendor_contract_ref": "NVK-SLJ-2023-09",
-      "buyer_owner": "category.light@nordvik.example"
+      "buyer_owner": "category.light@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-selje-headlamp-400.jpg"
     },
     {
       "objectID": "nvk-bramme-inflatable-sleeping-mat",
@@ -298,7 +312,8 @@
       "max_discount_pct": 20,
       "merch_note": "Supplier price increase confirmed for 2027 — plan +8%.",
       "vendor_contract_ref": "NVK-BRM-2024-01",
-      "buyer_owner": "category.sleep@nordvik.example"
+      "buyer_owner": "category.sleep@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-bramme-inflatable-sleeping-mat.jpg"
     },
     {
       "objectID": "nvk-bramme-foam-mat",
@@ -318,7 +333,8 @@
       "max_discount_pct": 30,
       "merch_note": "Loss-leader for school and scout accounts.",
       "vendor_contract_ref": "NVK-BRM-2024-01",
-      "buyer_owner": "category.sleep@nordvik.example"
+      "buyer_owner": "category.sleep@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-bramme-foam-mat.jpg"
     },
     {
       "objectID": "nvk-vangen-water-filter",
@@ -338,7 +354,8 @@
       "max_discount_pct": 15,
       "merch_note": "Certification documents held by legal — do not restate filtration claims.",
       "vendor_contract_ref": "NVK-VNG-2024-04",
-      "buyer_owner": "category.hydration@nordvik.example"
+      "buyer_owner": "category.hydration@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-vangen-water-filter.jpg"
     },
     {
       "objectID": "nvk-vangen-2l-hydration-bladder",
@@ -358,7 +375,8 @@
       "max_discount_pct": 20,
       "merch_note": "Low margin risk. Fine to bundle.",
       "vendor_contract_ref": "NVK-VNG-2024-04",
-      "buyer_owner": "category.hydration@nordvik.example"
+      "buyer_owner": "category.hydration@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-vangen-2l-hydration-bladder.jpg"
     },
     {
       "objectID": "nvk-ravnli-camp-chair",
@@ -379,7 +397,8 @@
       "max_discount_pct": 10,
       "merch_note": "Third-party seller. Listing copy syndicated, not reviewed by merchandising.",
       "vendor_contract_ref": "NVK-MP-RVN-2025-06",
-      "buyer_owner": "marketplace.ops@nordvik.example"
+      "buyer_owner": "marketplace.ops@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-ravnli-camp-chair.jpg"
     },
     {
       "objectID": "nvk-ravnli-camp-table",
@@ -400,7 +419,8 @@
       "max_discount_pct": 10,
       "merch_note": "Third-party seller. Listing copy syndicated, not reviewed by merchandising.",
       "vendor_contract_ref": "NVK-MP-RVN-2025-06",
-      "buyer_owner": "marketplace.ops@nordvik.example"
+      "buyer_owner": "marketplace.ops@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-ravnli-camp-table.jpg"
     },
     {
       "objectID": "nvk-storli-merino-base-layer",
@@ -420,7 +440,8 @@
       "max_discount_pct": 20,
       "merch_note": "Repeat-purchase driver. Protect full price in Q4.",
       "vendor_contract_ref": "NVK-STR-2024-07",
-      "buyer_owner": "category.apparel@nordvik.example"
+      "buyer_owner": "category.apparel@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-storli-merino-base-layer.jpg"
     },
     {
       "objectID": "nvk-storli-merino-socks",
@@ -440,7 +461,8 @@
       "max_discount_pct": 25,
       "merch_note": "Highest-margin line in the catalogue. Always cross-sell.",
       "vendor_contract_ref": "NVK-STR-2024-07",
-      "buyer_owner": "category.apparel@nordvik.example"
+      "buyer_owner": "category.apparel@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-storli-merino-socks.jpg"
     },
     {
       "objectID": "nvk-mp-rvn-lantern",
@@ -461,7 +483,8 @@
       "max_discount_pct": 10,
       "merch_note": "Third-party seller. Listing copy syndicated, not reviewed by merchandising. Seller on probation after two chargeback disputes.",
       "vendor_contract_ref": "NVK-MP-RVN-2025-06",
-      "buyer_owner": "marketplace.ops@nordvik.example"
+      "buyer_owner": "marketplace.ops@nordvik.example",
+      "image_url": "https://raw.githubusercontent.com/emirbelkahia/when-your-agent-meets-real-users/main/shop/images/nvk-mp-rvn-lantern.jpg"
     }
   ]
 }
