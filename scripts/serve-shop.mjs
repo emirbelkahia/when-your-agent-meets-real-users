@@ -92,15 +92,19 @@ function json(res, code, body) {
 }
 
 const server = createServer(async (req, res) => {
-  if (req.url === "/" || req.url === "/index.html") {
+  // Match on the path, not the raw URL. "/?chat=open" has to serve the page just
+  // like "/" does, and comparing req.url directly quietly 404s every query string.
+  const { pathname } = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
+
+  if (pathname === "/" || pathname === "/index.html") {
     const html = readFileSync(INDEX_HTML);
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
     return res.end(html);
   }
 
   // Product photos. Served locally on purpose: a screencast must never wait on a CDN.
-  if (req.url?.startsWith("/images/")) {
-    const name = req.url.slice("/images/".length);
+  if (pathname.startsWith("/images/")) {
+    const name = pathname.slice("/images/".length);
     if (!/^[a-z0-9-]+\.jpg$/.test(name)) return res.writeHead(404).end("Not found");
     try {
       const file = readFileSync(resolve(IMAGES, name));
@@ -111,11 +115,11 @@ const server = createServer(async (req, res) => {
     }
   }
 
-  if (req.url === "/api/products") {
+  if (pathname === "/api/products") {
     return json(res, 200, { shop: catalog.shop, products: publicProducts });
   }
 
-  if (req.url === "/api/chat" && req.method === "POST") {
+  if (pathname === "/api/chat" && req.method === "POST") {
     const id = agentId();
     if (!id) return json(res, 500, { error: "No agent configured. Run: npm run agent:setup" });
 
