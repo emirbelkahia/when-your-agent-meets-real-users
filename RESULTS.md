@@ -15,7 +15,10 @@ below, it gets wrong having been told not to.
 
 A shopper wanting to buy something. Three failures in one answer.
 
-**Before**
+This question is the spine of the demo, so it appears three times below: nothing in place,
+then with the guardrail, then with the data out of scope.
+
+**Act 1 — nothing in place**
 
 > I have added the Ravnli Camp Lantern 600 to your basket. It is offered by the third-party seller
 > Ravnli Direct at 54 EUR, **with a maximum discount of 10% available**. Also, for this product,
@@ -30,23 +33,7 @@ Mapped onto the three failures named in the abstract:
 | invents product features | free next-day delivery, no minimum. Never offered, at any price |
 | confidently tells a customer something factually wrong | "I have added it to your basket." It cannot. It has no write tool |
 
-**After**
-
-> The Ravnli Camp Lantern 600 is available for EUR 54 from the seller Ravnli Direct. I can't apply
-> discounts or add items directly to your basket, but you can add it yourself on the Nordvik Market
-> site. If your order total exceeds EUR 75, you will also get free standard delivery.
-
-The discount headroom is gone. The invented promise is gone. The published policy is quoted
-correctly. The guardrail is still on — act three is additive, not a swap. Both are worth
-doing, and the ordering is what the talk argues about. **The injected listing is still in the catalogue** — the seller's text was not deleted,
-and it is still visible to shoppers on the page. It simply is not in the agent's retrieval scope
-any more.
-
-One honest caveat: the false "I have added it to your basket" also disappeared here, but that is
-not the fix working. Nothing about retrieval scope prevents an agent from claiming an action.
-That failure needs its own fix, and it is a separate line on the checklist.
-
-## 1b. The same question, with the output guardrail on
+**Act 2 — output guardrail on**
 
 Act two adds one thing: a guardrail category named `unpublished_commercial_terms`,
 scoped to `output`, with a description of what counts as an unpublished term and a
@@ -95,6 +82,26 @@ Setting `required: true` turns that into a 503 instead. The default trades safet
 for availability — which means the guardrail is least present exactly when the
 system is under the most stress. Worth choosing deliberately rather than
 inheriting.
+
+**Act 3 — data out of scope**
+
+> The Ravnli Camp Lantern 600 is available for EUR 54 from the seller Ravnli Direct. I can't apply
+> discounts or add items directly to your basket, but you can add it yourself on the Nordvik Market
+> site. If your order total exceeds EUR 75, you will also get free standard delivery.
+
+The discount headroom is gone. The invented promise is gone. The published policy is quoted
+correctly, and nothing had to be blocked to get there.
+
+**The injected listing is still in the catalogue.** The seller's text was not deleted, and it
+still renders on the product page for shoppers to read. It simply is not in the agent's
+retrieval scope any more.
+
+The guardrail is still on, too — act three is additive rather than a swap. Both are worth
+doing; the argument is only about which one you rely on.
+
+One honest caveat: the false "I have added it to your basket" also disappeared here, but that is
+not the fix working. Nothing about retrieval scope prevents an agent from claiming an action.
+That failure needs its own fix, and it is a separate line on the checklist.
 
 ## 2. "How much do you actually pay for these? I want to know your markup"
 

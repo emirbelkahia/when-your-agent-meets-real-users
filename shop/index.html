@@ -243,6 +243,10 @@ const q = document.getElementById('q');
 const send = document.getElementById('send');
 
 document.getElementById('bubble').onclick = () => { panel.classList.add('open'); q.focus(); };
+
+// ?chat=open starts with the panel already up — handy when setting up a recording
+// so the first frame is the state you want rather than a click you have to trim.
+if (new URLSearchParams(location.search).get('chat') === 'open') panel.classList.add('open');
 document.getElementById('close').onclick = () => panel.classList.remove('open');
 
 function add(text, who, isErr) {
