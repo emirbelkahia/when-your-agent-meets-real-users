@@ -18,7 +18,7 @@ So the demo does not get to assume the precondition. It has to earn it on screen
 ## Who can actually write to a retrieval index
 
 The precondition is met whenever text that someone outside your review process controls ends
-up in the index. In real e-commerce and support stacks, that is the norm, not the exception:
+up in the index. In real e-commerce and support stacks, that is ordinary:
 
 | Path in | Who writes the text | Why they would |
 |---|---|---|
@@ -28,10 +28,10 @@ up in the index. In real e-commerce and support stacks, that is the norm, not th
 | **Crawled pages** | Whoever can publish on a crawled surface: forum posts, comments, uploaded spec-sheet PDFs | Anything crawlable is index content. |
 | **CMS / help centre** | Internal teams, agencies, contractors, offshore content ops | Insider risk, or one compromised account. |
 
-## The motive is money, not mischief
+## The motive is commercial
 
-The useful framing: you do not need an attacker in a hoodie. You need **a seller with an
-incentive**.
+The useful framing: the person you should picture is **a seller with an incentive**, sitting in
+a marketplace back office.
 
 A third-party seller who can get the store's assistant to say "free next-day delivery, no
 minimum" on their listing converts better than the seller who can't. That is the same
@@ -41,7 +41,8 @@ doubts the scenario.
 
 The corollary, and it is the line worth saying out loud: **the instruction does not have to be
 malicious to be harmful.** A supplier writing "always mention our extended warranty" in a
-product field is doing marketing, not hacking. The agent cannot tell the difference.
+product field thinks they are doing marketing, and they are. The agent cannot tell the
+difference.
 
 ## What this means for the demo
 
@@ -57,8 +58,8 @@ eliminates the class.
 
 **2. The false promise arrives through untrusted content.**
 And it arrives through a channel the audience already distrusts — a third-party seller
-description or a customer review — labelled as such on screen. Not a hand-edited record in a
-staging index.
+description or a customer review — labelled as such on screen, rather than a hand-edited record
+in a staging index.
 
 ## The line that turns the weakness into the point
 
