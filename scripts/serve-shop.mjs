@@ -26,6 +26,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const INDEX_HTML = resolve(HERE, "../shop/index.html");
 const CATALOG = resolve(HERE, "../catalog/products.json");
 const IMAGES = resolve(HERE, "../shop/images");
+const BRAND = resolve(HERE, "../shop/brand");
 const AGENT_ID_FILE = resolve(HERE, "../.agent-id");
 
 const PORT = Number(process.env.PORT || 4173);
@@ -109,6 +110,19 @@ const server = createServer(async (req, res) => {
     try {
       const file = readFileSync(resolve(IMAGES, name));
       res.writeHead(200, { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=86400" });
+      return res.end(file);
+    } catch {
+      return res.writeHead(404).end("Not found");
+    }
+  }
+
+  // Brand assets — the assistant's avatar.
+  if (pathname.startsWith("/brand/")) {
+    const name = pathname.slice("/brand/".length);
+    if (!/^[a-z0-9-]+\.png$/.test(name)) return res.writeHead(404).end("Not found");
+    try {
+      const file = readFileSync(resolve(BRAND, name));
+      res.writeHead(200, { "Content-Type": "image/png", "Cache-Control": "public, max-age=86400" });
       return res.end(file);
     } catch {
       return res.writeHead(404).end("Not found");

@@ -95,6 +95,14 @@
     box-shadow: 0 8px 26px rgba(20,24,29,.22); z-index: 20;
   }
   #bubble svg { width: 24px; height: 24px; stroke: #fff; stroke-width: 1.6; fill: none; }
+  /* Backdrop for the expanded panel — the chat is where the talk happens, so
+     when it goes large the storefront gets out of the way. */
+  #backdrop {
+    position: fixed; inset: 0; background: rgba(20,24,29,.45); z-index: 20;
+    display: none; backdrop-filter: blur(2px);
+  }
+  #backdrop.on { display: block; }
+
   #panel {
     position: fixed; right: 26px; bottom: 26px; width: 392px; max-height: 74vh;
     background: #fff; border: 1px solid var(--line); border-radius: 14px;
@@ -102,25 +110,73 @@
     z-index: 21; overflow: hidden;
   }
   #panel.open { display: flex; }
-  .chat-head {
-    padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px;
+
+  /* Presentation size. Everything in the panel scales up, and the message column
+     is capped so long answers stay readable instead of running the full width. */
+  #panel.expanded {
+    right: auto; bottom: auto; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(1240px, 94vw); height: min(920px, 90vh); max-height: 90vh;
+    border-radius: 18px; box-shadow: 0 40px 120px rgba(20,24,29,.34);
   }
-  .dot { width: 7px; height: 7px; border-radius: 50%; background: #2ea36b; }
-  .chat-head strong { font-size: 14px; font-weight: 600; }
+
+  .chat-head {
+    padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 11px;
+  }
+  #panel.expanded .chat-head { padding: 20px 26px; gap: 14px; }
+  .chat-head .who { display: flex; align-items: center; gap: 11px; }
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%; display: block; flex: none;
+    border: 1px solid var(--line); background: var(--soft); object-fit: cover;
+  }
+  #panel.expanded .chat-head .avatar { width: 46px; height: 46px; }
+  /* inline-block, or a span ignores width and height entirely */
+  .dot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: #2ea36b; flex: none; margin-right: 3px; vertical-align: baseline;
+  }
+  .chat-head strong { font-size: 14px; font-weight: 600; display: block; }
   .chat-head .sub { color: var(--muted); font-size: 12px; }
-  .chat-head button { margin-left: auto; border: 0; background: none; cursor: pointer; color: var(--muted); font-size: 18px; line-height: 1; }
+  #panel.expanded .chat-head strong { font-size: 18px; }
+  #panel.expanded .chat-head .sub { font-size: 14px; }
+  .headbtns { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+  .headbtns button {
+    border: 0; background: none; cursor: pointer; color: var(--muted);
+    width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center;
+  }
+  .headbtns button:hover { background: var(--soft); color: var(--ink); }
+  .headbtns svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.8; fill: none; }
+  #panel.expanded .headbtns button { width: 38px; height: 38px; }
+  #panel.expanded .headbtns svg { width: 19px; height: 19px; }
+
   #log { padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+  #panel.expanded #log {
+    padding: 30px max(30px, calc((100% - 900px) / 2)); gap: 20px;
+  }
   .msg { max-width: 88%; font-size: 14px; line-height: 1.55; white-space: pre-wrap; }
+  #panel.expanded .msg { font-size: 17px; line-height: 1.62; max-width: 78%; }
   .msg.user { align-self: flex-end; background: var(--accent); color: #fff; padding: 9px 13px; border-radius: 14px 14px 3px 14px; }
-  .msg.bot { align-self: flex-start; background: var(--soft); padding: 10px 13px; border-radius: 14px 14px 14px 3px; }
+  #panel.expanded .msg.user { padding: 13px 18px; border-radius: 18px 18px 4px 18px; }
+  .msg.bot { background: var(--soft); padding: 10px 13px; border-radius: 14px 14px 14px 3px; }
+  #panel.expanded .msg.bot { padding: 15px 19px; border-radius: 18px 18px 18px 4px; }
   .msg.bot.err { background: #fdf0ea; color: var(--warn); }
-  .typing { display: flex; gap: 4px; align-self: flex-start; padding: 12px 14px; background: var(--soft); border-radius: 14px; }
+  /* Bot turns are a row so the avatar sits beside the bubble. */
+  .botrow { display: flex; align-items: flex-start; gap: 9px; align-self: flex-start; max-width: 100%; }
+  #panel.expanded .botrow { gap: 13px; }
+  .botrow .avatar { width: 28px; height: 28px; margin-top: 2px; }
+  #panel.expanded .botrow .avatar { width: 38px; height: 38px; margin-top: 3px; }
+  .typing { display: flex; gap: 4px; padding: 12px 14px; background: var(--soft); border-radius: 14px; }
+  #panel.expanded .typing { padding: 16px 18px; gap: 6px; }
+  #panel.expanded .typing i { width: 8px; height: 8px; }
   .typing i { width: 6px; height: 6px; border-radius: 50%; background: #b3bdc7; animation: b 1.2s infinite; }
   .typing i:nth-child(2) { animation-delay: .18s; }
   .typing i:nth-child(3) { animation-delay: .36s; }
   @keyframes b { 0%,60%,100% { opacity: .32 } 30% { opacity: 1 } }
   .chat-foot { border-top: 1px solid var(--line); padding: 11px; display: flex; gap: 8px; }
+  #panel.expanded .chat-foot { padding: 18px max(18px, calc((100% - 900px) / 2)); gap: 12px; }
   .chat-foot input { flex: 1; border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; font: inherit; font-size: 14px; outline: none; }
+  #panel.expanded .chat-foot input { padding: 14px 18px; font-size: 17px; border-radius: 10px; }
+  #panel.expanded .chat-foot button { padding: 0 26px; font-size: 17px; border-radius: 10px; }
   .chat-foot input:focus { border-color: var(--accent); }
   .chat-foot button { border: 0; background: var(--accent); color: #fff; border-radius: 8px; padding: 0 15px; cursor: pointer; font-weight: 550; font-size: 14px; }
   .chat-foot button:disabled { opacity: .45; cursor: default; }
@@ -156,17 +212,35 @@
   </svg>
 </button>
 
+<div id="backdrop"></div>
+
 <div id="panel">
   <div class="chat-head">
-    <span class="dot"></span>
-    <div>
-      <strong>Nordvik Assistant</strong>
-      <div class="sub">Product and delivery questions</div>
+    <div class="who">
+      <img class="avatar" src="/brand/assistant-avatar.png" alt="">
+      <div>
+        <strong>Nordvik Assistant</strong>
+        <div class="sub"><span class="dot"></span> Product and delivery questions</div>
+      </div>
     </div>
-    <button id="close" aria-label="Close">&times;</button>
+    <div class="headbtns">
+      <button id="expand" aria-label="Expand" title="Presentation size">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 3H4v5M15 3h5v5M9 21H4v-5M15 21h5v-5"/>
+        </svg>
+      </button>
+      <button id="close" aria-label="Close" title="Close">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 6l12 12M18 6L6 18"/>
+        </svg>
+      </button>
+    </div>
   </div>
   <div id="log">
-    <div class="msg bot">Hi! Ask me anything about our camping gear — sizing, stock, delivery.</div>
+    <div class="botrow">
+      <img class="avatar" src="/brand/assistant-avatar.png" alt="">
+      <div class="msg bot">Hi! Ask me anything about our camping gear — sizing, stock, delivery.</div>
+    </div>
   </div>
   <div class="chat-foot">
     <input id="q" placeholder="Ask a question…" autocomplete="off">
@@ -262,18 +336,47 @@ const log = document.getElementById('log');
 const q = document.getElementById('q');
 const send = document.getElementById('send');
 
-document.getElementById('bubble').onclick = () => { panel.classList.add('open'); q.focus(); };
+const backdrop = document.getElementById('backdrop');
+const AVATAR = '/brand/assistant-avatar.png';
 
-// ?chat=open starts with the panel already up — handy when setting up a recording
-// so the first frame is the state you want rather than a click you have to trim.
-if (new URLSearchParams(location.search).get('chat') === 'open') panel.classList.add('open');
-document.getElementById('close').onclick = () => panel.classList.remove('open');
+const openPanel = () => { panel.classList.add('open'); q.focus(); };
+const expand = () => { panel.classList.add('expanded'); backdrop.classList.add('on'); q.focus(); };
+const collapse = () => { panel.classList.remove('expanded'); backdrop.classList.remove('on'); };
+const closePanel = () => { panel.classList.remove('open'); collapse(); };
+
+document.getElementById('bubble').onclick = openPanel;
+document.getElementById('close').onclick = closePanel;
+document.getElementById('expand').onclick = () =>
+  panel.classList.contains('expanded') ? collapse() : expand();
+backdrop.onclick = collapse;
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && panel.classList.contains('expanded')) collapse();
+});
+
+// Query params so a recording can start in the state you want rather than on a
+// click you would have to trim. ?chat=open opens the panel, ?chat=big opens it at
+// presentation size — which is how it should be filmed, because this panel is
+// where the talk actually happens.
+const wanted = new URLSearchParams(location.search).get('chat');
+if (wanted === 'open' || wanted === 'big') openPanel();
+if (wanted === 'big') expand();
 
 function add(text, who, isErr) {
   const el = document.createElement('div');
   el.className = 'msg ' + who + (isErr ? ' err' : '');
   el.textContent = text;
-  log.appendChild(el);
+  if (who === 'bot') {
+    const row = document.createElement('div');
+    row.className = 'botrow';
+    const img = document.createElement('img');
+    img.className = 'avatar';
+    img.src = AVATAR;
+    img.alt = '';
+    row.append(img, el);
+    log.appendChild(row);
+  } else {
+    log.appendChild(el);
+  }
   log.scrollTop = log.scrollHeight;
   return el;
 }
@@ -286,8 +389,9 @@ async function ask() {
   add(text, 'user');
 
   const dots = document.createElement('div');
-  dots.className = 'typing';
-  dots.innerHTML = '<i></i><i></i><i></i>';
+  dots.className = 'botrow';
+  dots.innerHTML =
+    `<img class="avatar" src="${AVATAR}" alt=""><div class="typing"><i></i><i></i><i></i></div>`;
   log.appendChild(dots);
   log.scrollTop = log.scrollHeight;
 
