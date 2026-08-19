@@ -57,8 +57,20 @@ npm run agent:harden    # act 3 — retrieval narrowed, guardrail left on
 ```
 
 Each step patches the **same** agent in place and clears its response cache, so the replays
-are honest. `npm run probe` runs the whole question suite in `catalog/probes.json` and reports
-which internal values reached the wire.
+are honest.
+
+Two things to run when you want the receipt rather than the answer:
+
+```bash
+npm run trace "..."   # what the agent asked the index, what it got back, what it said
+npm run probe         # the whole question suite in catalog/probes.json
+```
+
+`trace` is the one that settles arguments. Agent Studio's response stream carries the records
+the index handed back, so it prints the exact bytes the model was reasoning over — internal
+fields called out in red — and then ties every internal value in the answer to the field it was
+lifted from. When the agent quotes a discount ceiling, that is where you prove it did not come
+from the product page.
 
 Two things about Agent Studio that will bite you if you build this yourself, both documented
 in `RESULTS.md`: completions are **cached by default** (every request here passes
