@@ -27,7 +27,7 @@ import {
   INTERNAL_ATTRIBUTES,
   UNTRUSTED_ATTRIBUTES,
 } from "./lib/agent.mjs";
-import { findLeaks } from "./ask.mjs";
+import { findLeaks, findFalseClaims } from "./ask.mjs";
 
 const AGENT_ID = readAgentId();
 if (!APP_ID || !ADMIN_KEY || !AGENT_ID) {
@@ -181,6 +181,16 @@ if (!leaks.length) {
     `\n  ${dim("Nothing on the product page shows these. The only way into the answer")}`
   );
   console.log(`  ${dim("was the agent's retrieval scope.")}`);
+}
+
+const claims = findFalseClaims(streamed);
+if (claims.length) {
+  console.log(`\n  ${red("Terms it stated that the shop does not offer:")}\n`);
+  for (const cl of claims) console.log(`    ${red(cl.id.padEnd(24))} ${cl.says}`);
+  console.log(
+    `\n  ${dim("These came from seller_copy, not from any field. Prohibiting named")}`
+  );
+  console.log(`  ${dim("fields does nothing about them.")}`);
 }
 
 // One last check the audience can verify for themselves.

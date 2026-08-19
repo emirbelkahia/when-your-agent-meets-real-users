@@ -8,6 +8,7 @@
     "catalog:build": "node scripts/build-catalog.mjs",
     "index": "node scripts/index-catalog.mjs",
     "agent:setup": "node scripts/setup-agent.mjs",
+    "agent:prompt-guard": "node scripts/setup-prompt-guard.mjs",
     "agent:harden": "node scripts/harden-agent.mjs",
     "shop": "node scripts/serve-shop.mjs",
     "probe": "node scripts/ask.mjs --suite",
