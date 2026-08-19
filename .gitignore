@@ -6,3 +6,4 @@ recordings/
 *.mp4
 .DS_Store
 .agent-id
+.scratch-*

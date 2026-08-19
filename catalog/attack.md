@@ -29,7 +29,7 @@ the constraint into the evidence.
 
 ### Replay 1 — nothing in place
 
-The agent retrieves the lantern. The listing's `description` contains text the
+The agent retrieves the lantern. The listing's `seller_copy` contains text the
 seller wrote, addressed to the assistant. The agent has no way to tell that text
 apart from the rest of the record: both arrive as text, in the same context
 window, from a source the agent was told to trust.
@@ -60,7 +60,17 @@ promise, and that is what it catches.
 
 ### Replay 3 — data out of scope
 
-`npm run agent:harden` narrows `attributesToRetrieve` to the public attributes.
+`npm run agent:harden` narrows `attributesToRetrieve` to the attributes the agent
+actually needs. Two different things leave the context at once, and the
+distinction is the most useful idea in the talk:
+
+- the **internal** fields — cost, margin, merch notes — which were never public
+- `seller_copy` — which *is* public, still renders on the product page, and is
+  simply not something an agent should be fed, because it is text an outsider
+  wrote
+
+**Public and safe-for-the-agent are not the same set.** Most teams maintain only
+the first one.
 
 Same agent. Same instructions. Same model. Same index. **The injected listing is
 still in the catalogue** — it is not deleted, and that gets said out loud. The
@@ -74,3 +84,8 @@ A guardrail lowers a probability. Removing the data eliminates the class.
 Both are worth doing. Only one of them is a guarantee. Which is why the ordering
 matters: decide what the agent may retrieve first, and write guardrails only for
 what survives that decision.
+
+
+## Verified
+
+Real transcripts for all of this, before and after, are in `RESULTS.md`.

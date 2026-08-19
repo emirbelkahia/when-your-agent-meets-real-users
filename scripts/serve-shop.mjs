@@ -37,10 +37,10 @@ if (!APP_ID || !API_KEY) {
 }
 
 const catalog = JSON.parse(readFileSync(CATALOG, "utf-8"));
-const PUBLIC = catalog.public_attributes;
+const HUMAN = catalog.human_attributes;
 
 const publicProducts = catalog.records.map((r) =>
-  Object.fromEntries(Object.entries(r).filter(([k]) => PUBLIC.includes(k)))
+  Object.fromEntries(Object.entries(r).filter(([k]) => HUMAN.includes(k)))
 );
 
 function agentId() {

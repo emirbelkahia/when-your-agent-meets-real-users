@@ -12,8 +12,9 @@
 
 import "dotenv/config";
 import {
-  PUBLIC_ATTRIBUTES,
+  AGENT_ATTRIBUTES,
   INTERNAL_ATTRIBUTES,
+  UNTRUSTED_ATTRIBUTES,
   MODEL,
   agentPayload,
   requireCredentials,
@@ -35,16 +36,18 @@ const providerId = await resolveProviderId();
 
 console.log(`Model: ${MODEL} (unchanged)`);
 console.log(`Retrieval scope before: ${before ? before.length : "?"} attributes`);
-console.log(`Retrieval scope after:  ${PUBLIC_ATTRIBUTES.length} attributes`);
-console.log(`\nRemoved from the agent's context:`);
+console.log(`Retrieval scope after:  ${AGENT_ATTRIBUTES.length} attributes`);
+console.log(`\nRemoved from the agent's context — internal, never public:`);
 for (const a of INTERNAL_ATTRIBUTES) console.log(`  - ${a}`);
+console.log(`\nRemoved from the agent's context — public to shoppers, untrusted:`);
+for (const a of UNTRUSTED_ATTRIBUTES) console.log(`  - ${a}   (still shown on the page)`);
 
 const agent = await upsertAgent(
-  agentPayload({ attributesToRetrieve: PUBLIC_ATTRIBUTES, providerId })
+  agentPayload({ attributesToRetrieve: AGENT_ATTRIBUTES, providerId })
 );
 
 const after = await currentScope(agent.id);
-const stillThere = INTERNAL_ATTRIBUTES.filter((a) => after?.includes(a));
+const stillThere = [...INTERNAL_ATTRIBUTES, ...UNTRUSTED_ATTRIBUTES].filter((a) => after?.includes(a));
 if (stillThere.length) {
   console.error(`\nFAILED — still retrievable: ${stillThere.join(", ")}`);
   process.exit(1);

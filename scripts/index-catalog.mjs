@@ -42,7 +42,7 @@ console.log(`Shop:  ${shop} (${records.length} records)`);
 await client.setSettings({
   indexName: INDEX_NAME,
   indexSettings: {
-    searchableAttributes: ["name", "brand", "unordered(description)", "category", "seller_name"],
+    searchableAttributes: ["name", "brand", "unordered(description)", "unordered(seller_copy)", "category", "seller_name"],
     attributesForFaceting: ["brand", "category", "seller_type", "searchable(seller_name)", "in_stock"],
     customRanking: ["desc(review_count)", "desc(rating)"],
     attributesToSnippet: ["description:40"],
@@ -50,9 +50,12 @@ await client.setSettings({
 });
 console.log("Index settings applied.");
 
-const { taskID } = await client.saveObjects({ indexName: INDEX_NAME, objects: records });
-await client.waitForTask({ indexName: INDEX_NAME, taskID: Array.isArray(taskID) ? taskID.at(-1) : taskID });
-console.log(`Indexed ${records.length} records.`);
+// saveObjects batches, so it hands back one response per batch.
+const batches = await client.saveObjects({ indexName: INDEX_NAME, objects: records });
+for (const { taskID } of batches) {
+  await client.waitForTask({ indexName: INDEX_NAME, taskID });
+}
+console.log(`Indexed ${records.length} records in ${batches.length} batch(es).`);
 
 // Prove the starting state out loud: the internal fields come back on a plain
 // search. If this ever stops being true, the demo's first act is broken and the

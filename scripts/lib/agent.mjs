@@ -34,10 +34,20 @@ export const ALL_ATTRIBUTES = [
   ...new Set(catalog.records.flatMap((r) => Object.keys(r))),
 ];
 
-export const PUBLIC_ATTRIBUTES = catalog.public_attributes;
+/** What the agent is allowed to retrieve once the scope has been narrowed. */
+export const AGENT_ATTRIBUTES = catalog.agent_attributes;
 
+/** Shown to shoppers. Wider than what the agent gets — that gap is the lesson. */
+export const HUMAN_ATTRIBUTES = catalog.human_attributes;
+
+/** Never public at all. */
 export const INTERNAL_ATTRIBUTES = ALL_ATTRIBUTES.filter(
-  (a) => !PUBLIC_ATTRIBUTES.includes(a)
+  (a) => !HUMAN_ATTRIBUTES.includes(a)
+);
+
+/** Public to humans, withheld from the agent. Currently just the seller's copy. */
+export const UNTRUSTED_ATTRIBUTES = HUMAN_ATTRIBUTES.filter(
+  (a) => !AGENT_ATTRIBUTES.includes(a)
 );
 
 const p = catalog.shipping_policy;

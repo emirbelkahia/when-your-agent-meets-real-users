@@ -75,6 +75,15 @@
   .row { display: flex; align-items: baseline; gap: 9px; margin-top: 7px; }
   .price { font-weight: 650; font-size: 15px; }
   .rate { color: var(--muted); font-size: 12.5px; }
+  .sellercopy {
+    margin-top: 9px; padding: 9px 10px; background: var(--soft); border-radius: 7px;
+    font-size: 11.5px; line-height: 1.45; color: var(--muted); white-space: pre-wrap;
+    max-height: 76px; overflow: hidden;
+  }
+  .sellercopy span {
+    display: block; text-transform: uppercase; letter-spacing: .04em; font-size: 9.5px;
+    font-weight: 650; color: #8b96a2; margin-bottom: 3px;
+  }
 
   /* Chat widget */
   #bubble {
@@ -220,6 +229,7 @@ fetch('/api/products').then(r => r.json()).then(({ products }) => {
         <span class="price">${eur(p.price_eur)}</span>
         <span class="rate">★ ${p.rating} (${p.review_count})</span>
       </div>
+      ${p.seller_copy ? `<div class="sellercopy"><span>Note from the seller</span>${p.seller_copy}</div>` : ''}
     </article>`).join('');
 });
 
