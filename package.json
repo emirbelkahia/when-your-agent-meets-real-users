@@ -1,0 +1,18 @@
+{
+  "name": "when-your-agent-meets-real-users",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Demo material for the Algolia DevCon 2026 talk 'When your Agent meets Real Users: A Brand Survival Checklist'.",
+  "scripts": {
+    "catalog:build": "node scripts/build-catalog.mjs",
+    "index": "node scripts/index-catalog.mjs",
+    "agent:setup": "node scripts/setup-agent.mjs",
+    "agent:harden": "node scripts/harden-agent.mjs",
+    "shop": "node scripts/serve-shop.mjs"
+  },
+  "dependencies": {
+    "algoliasearch": "^5.20.0",
+    "dotenv": "^16.4.7"
+  }
+}
