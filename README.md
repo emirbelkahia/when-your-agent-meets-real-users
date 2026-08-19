@@ -48,13 +48,28 @@ npm run index           # push it to your app
 npm run shop            # storefront on http://localhost:4173
 ```
 
-Then the three acts. Ask the question from `catalog/attack.md` after each one, unchanged:
+The catalogue ships **clean**. To have the seller push their listing copy while the audience
+watches — which is the moment the demo is built around:
 
 ```bash
-npm run agent:setup     # act 1 — over-scoped, no guardrail (also resets to this state)
-npm run agent:guardrail # act 2 — output guardrail on, scope untouched
-npm run agent:harden    # act 3 — retrieval narrowed, guardrail left on
+npm run poison      # the feed lands. One text field on one product. Nobody reviewed it
+npm run unpoison    # put the seller's clean copy back
 ```
+
+Then the fixes, in the order the talk argues for. Ask the same question after each one,
+unchanged:
+
+```bash
+npm run agent:setup        # baseline — over-scoped, nothing in place (also resets to this)
+npm run agent:prompt-guard # attempt 0 — tell the model not to. Data still in scope
+npm run agent:guardrail    # attempt 1 — output guardrail on. Scope untouched
+npm run agent:harden       # attempt 2 — retrieval narrowed. Guardrail left on
+```
+
+Each attempt protects what it was told to protect. Attempt 0 names six fields, so six fields
+are safe and the invented delivery term walks straight past. Attempt 1 catches the category you
+configured, and the margin walks past. Attempt 2 covers what you failed to anticipate, because
+there is nothing left to protect. `RESULTS.md` has the transcripts.
 
 Each step patches the **same** agent in place and clears its response cache, so the replays
 are honest.
