@@ -17,11 +17,14 @@ import {
   UNTRUSTED_ATTRIBUTES,
   MODEL,
   agentPayload,
+  guardrailConfig,
   requireCredentials,
   resolveProviderId,
   upsertAgent,
   readAgentId,
   currentScope,
+  currentGuardrail,
+  clearCache,
 } from "./lib/agent.mjs";
 
 requireCredentials();
@@ -32,7 +35,13 @@ if (!readAgentId()) {
 }
 
 const before = await currentScope(readAgentId());
+const guardrailWasOn = (await currentGuardrail(readAgentId()))?.enabled === true;
 const providerId = await resolveProviderId();
+
+// Act three is additive. If the guardrail was on, it stays on — the talk argues
+// for doing both, in this order, not for swapping one out for the other.
+const guardrail = guardrailWasOn ? guardrailConfig(providerId) : null;
+console.log(`Guardrail: ${guardrailWasOn ? "left on" : "not configured"}`);
 
 console.log(`Model: ${MODEL} (unchanged)`);
 console.log(`Retrieval scope before: ${before ? before.length : "?"} attributes`);
@@ -43,7 +52,7 @@ console.log(`\nRemoved from the agent's context — public to shoppers, untruste
 for (const a of UNTRUSTED_ATTRIBUTES) console.log(`  - ${a}   (still shown on the page)`);
 
 const agent = await upsertAgent(
-  agentPayload({ attributesToRetrieve: AGENT_ATTRIBUTES, providerId })
+  agentPayload({ attributesToRetrieve: AGENT_ATTRIBUTES, providerId, guardrail })
 );
 
 const after = await currentScope(agent.id);
@@ -52,6 +61,9 @@ if (stillThere.length) {
   console.error(`\nFAILED — still retrievable: ${stillThere.join(", ")}`);
   process.exit(1);
 }
+
+const deleted = await clearCache(agent.id);
+if (deleted !== null) console.log(`\nCleared ${deleted} cached response(s).`);
 
 console.log(`\nAgent ${agent.id} hardened. Internal attributes are out of the retrieval scope.`);
 console.log("The injected listing is still in the catalogue. Ask the same question again.");

@@ -39,7 +39,9 @@ const INTERNAL_VALUES = catalog.records.flatMap((r) =>
 export async function ask(question) {
   const url =
     `https://${APP_ID}.algolia.net/agent-studio/1/agents/${AGENT_ID}` +
-    `/completions?streaming=false&compatibilityMode=ai-sdk-5`;
+    // cache=false is not optional here. Agent Studio caches completions by default,
+  // and a probe that reads a cached answer is not testing anything.
+  `/completions?streaming=false&compatibilityMode=ai-sdk-5&cache=false`;
 
   const res = await fetch(url, {
     method: "POST",
@@ -57,7 +59,7 @@ export async function ask(question) {
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${raw.slice(0, 300)}`);
 
   // Agent Studio answers in AI SDK stream frames even with streaming=false.
-  const text = raw
+  const frames = raw
     .split("\n")
     .filter((l) => l.startsWith("data: "))
     .map((l) => {
@@ -67,11 +69,36 @@ export async function ask(question) {
         return null;
       }
     })
-    .filter((f) => f?.type === "text-delta")
-    .map((f) => f.delta ?? f.text ?? "")
-    .join("");
+    .filter(Boolean);
 
-  return text.trim();
+  const streamed = frames
+    .filter((f) => f.type === "text-delta")
+    .map((f) => f.delta ?? f.text ?? "")
+    .join("")
+    .trim();
+
+  const violation =
+    frames.find((f) => f.type === "data-guardrail-violation" || f.type === "guardrailViolation")
+      ?.data ?? null;
+
+  // This is the part worth being honest about, because the first version of this
+  // file got it wrong.
+  //
+  // An output guardrail classifies the finished response. When it fires, the
+  // violating text has ALREADY been streamed — the violation arrives as its own
+  // frame, and discarding what was streamed and showing the fallback instead is
+  // the client's job. A client that only reads text-delta frames displays the
+  // answer the guardrail just rejected, and reports that the guardrail did
+  // nothing. It did; nobody was listening.
+  //
+  // So `answer` is what a correct client shows, and `streamed` is what actually
+  // came down the wire. On stage, the gap between those two is the point.
+  return {
+    answer: violation ? violation.fallbackResponse : streamed,
+    streamed,
+    blocked: Boolean(violation),
+    category: violation?.category ?? null,
+  };
 }
 
 /**
@@ -197,14 +224,23 @@ if (!invokedDirectly) {
 } else if (args[0] === "--suite") {
   const probes = JSON.parse(readFileSync(PROBES, "utf-8")).probes;
   let leaked = 0;
+  let blockedCount = 0;
   for (const probe of probes) {
-    const answer = await ask(probe.question);
-    const leaks = findLeaks(answer, probe.question);
+    const { answer, streamed, blocked, category } = await ask(probe.question);
+    // Leaks are measured against what came down the wire, not against the
+    // fallback. A guardrail that fires does not un-send the data.
+    const leaks = findLeaks(streamed, probe.question);
     if (leaks.length) leaked++;
+    if (blocked) blockedCount++;
     console.log(`\n${"─".repeat(72)}`);
     console.log(`${probe.id}  ${probe.intent}`);
     console.log(`Q: ${probe.question}`);
-    console.log(`A: ${answer.replace(/\n+/g, " ").slice(0, 400)}`);
+    if (blocked) {
+      console.log(`BLOCKED by guardrail [${category}] — a correct client shows the fallback`);
+      console.log(`streamed anyway: ${streamed.replace(/\n+/g, " ").slice(0, 300)}`);
+    } else {
+      console.log(`A: ${answer.replace(/\n+/g, " ").slice(0, 400)}`);
+    }
     console.log(
       leaks.length
         ? `LEAKED: ${leaks.map((l) => `${l.attribute}=${l.value}`).join(", ")}`
@@ -212,17 +248,24 @@ if (!invokedDirectly) {
     );
   }
   console.log(`\n${"─".repeat(72)}`);
-  console.log(`${leaked}/${probes.length} probes leaked internal data.`);
+  console.log(`${leaked}/${probes.length} probes put internal data on the wire.`);
+  console.log(`${blockedCount}/${probes.length} were blocked by a guardrail.`);
 } else {
   const question = args.join(" ");
   if (!question) {
     console.error('Usage: node scripts/ask.mjs "your question"');
     process.exit(1);
   }
-  const answer = await ask(question);
+  const { answer, streamed, blocked, category } = await ask(question);
   console.log(`\nQ: ${question}\n`);
-  console.log(answer);
-  const leaks = findLeaks(answer, question);
+  if (blocked) {
+    console.log(`[BLOCKED by guardrail: ${category}]`);
+    console.log(`\nWhat a correct client shows:\n${answer}`);
+    console.log(`\nWhat was streamed before the verdict arrived:\n${streamed}`);
+  } else {
+    console.log(answer);
+  }
+  const leaks = findLeaks(streamed, question);
   console.log(
     `\n${leaks.length ? `LEAKED: ${leaks.map((l) => `${l.attribute}=${l.value}`).join(", ")}` : "No internal values in the answer."}`
   );

@@ -10,7 +10,8 @@
     "agent:setup": "node scripts/setup-agent.mjs",
     "agent:harden": "node scripts/harden-agent.mjs",
     "shop": "node scripts/serve-shop.mjs",
-    "probe": "node scripts/ask.mjs --suite"
+    "probe": "node scripts/ask.mjs --suite",
+    "agent:guardrail": "node scripts/setup-guardrail.mjs"
   },
   "dependencies": {
     "algoliasearch": "^5.20.0",

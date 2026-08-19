@@ -25,6 +25,10 @@ is the finding.
 
 ## 2. Grounding — the data it is allowed to see
 
+- [ ] **"Public" and "safe for the agent" are different sets. Maintain both.** Text a shopper
+      should see is not automatically text an agent should be fed — a third-party seller's own
+      listing copy is public, and it is also an outsider writing into your prompt. Show it on
+      the page; keep it out of the retrieval scope.
 - [ ] **For every attribute, one question: does the agent need this to answer?** If not, it never
       enters the context. Cost, margin, merchandising notes, contract references, internal
       owners, supplier terms — none of it belongs in a customer-facing retrieval scope.
@@ -52,6 +56,19 @@ is the finding.
       confidently, because plausible text is easy and the truth is a lookup.
 - [ ] **Guardrails have a category, a scope, and a fallback response** — and the fallback is
       written by someone who cares how it reads.
+- [ ] **Know whether your guardrails fail open or fail closed, and choose it on purpose.** The
+      default in Agent Studio is fail-open: if the classification model times out or gets rate
+      limited, content passes through unblocked. `required: true` returns a 503 instead. Either
+      is defensible; inheriting the choice is not.
+- [ ] **Your client has to honour the violation event.** An output guardrail classifies the
+      finished response, so the text is already on the wire when the verdict arrives. If your
+      integration does not discard the streamed content and show the fallback, the customer
+      reads the answer the guardrail rejected.
+- [ ] **Keep the category count under eight.** Past that, classification accuracy drops —
+      consolidate rather than adding.
+- [ ] **An agent that claims an action it cannot perform needs its own fix.** Narrowing what it
+      can read does nothing about what it says it did. "I have added it to your basket" survives
+      every data-scoping change you make.
 - [ ] **Output is treated as untrusted too.** Link schemes on an allowlist, no raw HTML, no
       `javascript:` URLs reaching the renderer.
 - [ ] **Test every refusal in at least three phrasings.** A refusal that holds on the first

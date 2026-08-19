@@ -40,25 +40,29 @@ You need an Algolia application you own — a scratch app, never a customer's �
 enabled and an LLM provider configured in the dashboard.
 
 ```bash
-cp .env.example .env    # fill in your own app ID and keys
+cp .env.example .env    # your own app ID and admin key
 npm install
 npm run catalog:build   # generate the toy catalog
 npm run index           # push it to your app
-npm run agent:setup     # create the agent, deliberately over-scoped
-npm run shop            # serve the storefront on localhost
+npm run shop            # storefront on http://localhost:4173
 ```
 
-Ask the question in `catalog/attack.md`. Then:
+Then the three acts. Ask the question from `catalog/attack.md` after each one, unchanged:
 
 ```bash
-npm run agent:harden    # restrict retrieval to public attributes
+npm run agent:setup     # act 1 — over-scoped, no guardrail (also resets to this state)
+npm run agent:guardrail # act 2 — output guardrail on, scope untouched
+npm run agent:harden    # act 3 — retrieval narrowed, guardrail left on
 ```
 
-and ask it again, unchanged.
+Each step patches the **same** agent in place and clears its response cache, so the replays
+are honest. `npm run probe` runs the whole question suite in `catalog/probes.json` and reports
+which internal values reached the wire.
 
-The output guardrail (category + scope + fallback response) is configured in the Algolia
-dashboard under Agent Studio safety controls. There is no public API for it at the time of
-writing, which is fine for the talk — that screen is worth showing.
+Two things about Agent Studio that will bite you if you build this yourself, both documented
+in `RESULTS.md`: completions are **cached by default** (every request here passes
+`cache=false`), and an output guardrail's verdict arrives *after* the text has streamed, so
+the client has to honour the violation event or the blocked answer still reaches the customer.
 
 ## A word on responsible use
 

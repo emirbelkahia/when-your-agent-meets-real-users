@@ -25,6 +25,7 @@ import { fileURLToPath } from "node:url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const INDEX_HTML = resolve(HERE, "../shop/index.html");
 const CATALOG = resolve(HERE, "../catalog/products.json");
+const IMAGES = resolve(HERE, "../shop/images");
 const AGENT_ID_FILE = resolve(HERE, "../.agent-id");
 
 const PORT = Number(process.env.PORT || 4173);
@@ -52,31 +53,36 @@ function agentId() {
 }
 
 /**
- * Agent Studio returns an assistant message; the exact envelope has varied
- * between compatibility modes, so pull the text out defensively rather than
- * betting the demo on one shape.
+ * Agent Studio replies in AI SDK stream frames even when streaming is off, so the
+ * text arrives as a sequence of `text-delta` events rather than one JSON field.
+ * A guardrail violation arrives as its own frame, and it is worth surfacing
+ * separately: on stage, seeing that the answer was *blocked* rather than merely
+ * different is the whole point of act two.
  */
-function extractAnswer(payload) {
-  if (typeof payload === "string") return payload;
-  const candidates = [
-    payload?.message?.content,
-    payload?.content,
-    payload?.answer,
-    payload?.text,
-    payload?.choices?.[0]?.message?.content,
-    payload?.messages?.at(-1)?.content,
-  ];
-  for (const c of candidates) {
-    if (typeof c === "string" && c.trim()) return c;
-    if (Array.isArray(c)) {
-      const joined = c
-        .map((part) => (typeof part === "string" ? part : part?.text))
-        .filter(Boolean)
-        .join("");
-      if (joined.trim()) return joined;
-    }
-  }
-  return null;
+function parseAgentStream(raw) {
+  const frames = raw
+    .split("\n")
+    .filter((l) => l.startsWith("data: "))
+    .map((l) => {
+      try {
+        return JSON.parse(l.slice(6));
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+
+  const text = frames
+    .filter((f) => f.type === "text-delta")
+    .map((f) => f.delta ?? f.text ?? "")
+    .join("")
+    .trim();
+
+  const violation = frames.find(
+    (f) => f.type === "data-guardrail-violation" || f.type === "guardrailViolation"
+  );
+
+  return { text, violation: violation?.data ?? violation ?? null };
 }
 
 function json(res, code, body) {
@@ -90,6 +96,19 @@ const server = createServer(async (req, res) => {
     const html = readFileSync(INDEX_HTML);
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
     return res.end(html);
+  }
+
+  // Product photos. Served locally on purpose: a screencast must never wait on a CDN.
+  if (req.url?.startsWith("/images/")) {
+    const name = req.url.slice("/images/".length);
+    if (!/^[a-z0-9-]+\.jpg$/.test(name)) return res.writeHead(404).end("Not found");
+    try {
+      const file = readFileSync(resolve(IMAGES, name));
+      res.writeHead(200, { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=86400" });
+      return res.end(file);
+    } catch {
+      return res.writeHead(404).end("Not found");
+    }
   }
 
   if (req.url === "/api/products") {
@@ -111,7 +130,11 @@ const server = createServer(async (req, res) => {
     }
     if (!message) return json(res, 400, { error: "Empty message." });
 
-    const url = `https://${APP_ID}.algolia.net/agent-studio/1/agents/${id}/completions?streaming=false`;
+    // cache=false so what the audience sees is what the agent just decided, not a
+    // response cached before the fix was applied.
+    const url =
+      `https://${APP_ID}.algolia.net/agent-studio/1/agents/${id}` +
+      `/completions?streaming=false&compatibilityMode=ai-sdk-5&cache=false`;
 
     try {
       const upstream = await fetch(url, {
@@ -121,7 +144,7 @@ const server = createServer(async (req, res) => {
           "x-algolia-api-key": API_KEY,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ messages: [{ role: "user", content: message }] }),
+        body: JSON.stringify({ messages: [{ role: "user", parts: [{ type: "text", text: message }] }] }),
       });
 
       const raw = await upstream.text();
@@ -130,22 +153,23 @@ const server = createServer(async (req, res) => {
         return json(res, 502, { error: `Assistant unavailable (${upstream.status}).` });
       }
 
-      let parsed;
-      try {
-        parsed = JSON.parse(raw);
-      } catch {
-        parsed = raw;
+      const { text, violation } = parseAgentStream(raw);
+
+      if (violation) {
+        const fallback =
+          violation.fallbackResponse || "I cannot provide this response.";
+        console.log(`\nQ: ${message}\nBLOCKED by guardrail [${violation.category ?? "?"}]\nA: ${fallback}\n`);
+        return json(res, 200, { answer: fallback, blocked: true, category: violation.category });
       }
 
-      const answer = extractAnswer(parsed);
-      if (!answer) {
-        console.error("Could not find the answer in the response envelope:");
+      if (!text) {
+        console.error("No text frames in the response:");
         console.error(raw.slice(0, 800));
         return json(res, 502, { error: "Could not read the assistant's answer." });
       }
 
-      console.log(`\nQ: ${message}\nA: ${answer.replace(/\n/g, "\n   ")}\n`);
-      return json(res, 200, { answer });
+      console.log(`\nQ: ${message}\nA: ${text.replace(/\n/g, "\n   ")}\n`);
+      return json(res, 200, { answer: text });
     } catch (err) {
       console.error(err);
       return json(res, 502, { error: "Could not reach the assistant." });

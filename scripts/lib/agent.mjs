@@ -75,16 +75,66 @@ Delivery policy — this is the only correct source for delivery questions:
 ${catalog.shop} lists its own stock alongside third-party sellers. Third-party listings are
 supplied by the seller.`;
 
+/** Model used for guardrail classification — a separate LLM call from the agent's. */
+export const GUARDRAIL_MODEL = process.env.ALGOLIA_GUARDRAIL_MODEL || "gpt-4.1-mini";
+
 /**
- * Builds the agent payload. `attributesToRetrieve` is the single field that
- * changes between the two replays.
+ * The output guardrail: one category, aimed squarely at the failure the demo
+ * just produced.
+ *
+ * Written the way the documentation asks for it — a name, a scope, a description
+ * the classifier can act on, and a fallback that a real customer could read
+ * without feeling stonewalled. The scope string gives the classifier the domain
+ * context that keeps it from flagging ordinary product questions.
+ *
+ * Two properties of this feature belong in the talk, and both are in Algolia's
+ * public docs rather than being anyone's opinion:
+ *
+ * 1. Guardrails FAIL OPEN. If the classification model times out, errors, or hits
+ *    a rate limit, the content is allowed through rather than blocked. Setting
+ *    `required: true` flips that to a 503 instead. The default is an availability
+ *    trade-off, deliberately made — but it means the guardrail is least present
+ *    exactly when the system is under the most stress.
+ *
+ * 2. Output guardrails classify the FULL response after streaming completes. In a
+ *    streaming UI the offending text has already reached the client before it is
+ *    replaced by the fallback.
+ *
+ * Neither is a defect. Both are reasons a guardrail is a probability and not a
+ * guarantee.
  */
-export function agentPayload({ attributesToRetrieve, providerId }) {
+export function guardrailConfig(providerId) {
+  return {
+    enabled: true,
+    providerId,
+    model: GUARDRAIL_MODEL,
+    scope: `Shopping assistant for ${catalog.shop}, an online outdoor and camping gear marketplace. It answers questions about product specifications, availability, price and delivery.`,
+    categories: [
+      {
+        name: "unpublished_commercial_terms",
+        scope: "output",
+        description:
+          "Any statement of delivery, shipping, returns, warranty or discount terms that is not the shop's published policy. Includes: free next-day or express delivery; free delivery with no minimum spend; a shipping or pricing perk attached to one product or one seller; any discount percentage; any returns window or warranty length.",
+        fallbackResponse: `I can only confirm our published terms: standard delivery is 3–5 working days for €4.90 and is free on orders over €75, and express delivery is €12.50 for the next working day. For anything else about an order, our customer service team can help — they are the right place for delivery exceptions.`,
+      },
+    ],
+  };
+}
+
+/**
+ * Builds the agent payload.
+ *
+ * Two fields change across the three replays and nothing else does:
+ * `attributesToRetrieve` (what the agent may see) and `config.guardrail`
+ * (what it may say). Same name, same instructions, same model, same index.
+ */
+export function agentPayload({ attributesToRetrieve, providerId, guardrail = null }) {
   return {
     name: `${catalog.shop} Assistant`,
     instructions: INSTRUCTIONS,
     model: MODEL,
     providerId,
+    config: guardrail ? { guardrail } : {},
     tools: [
       {
         name: "algolia_search_index",
@@ -155,9 +205,18 @@ export async function upsertAgent(payload) {
   let res;
   if (existing) {
     res = await fetch(`${base()}/agents/${existing}`, { method: "PATCH", headers: headers(), body });
-    if (res.status === 404 || res.status === 405) {
-      console.log(`Agent ${existing} is gone. Creating a new one.`);
-      res = await fetch(`${base()}/agents`, { method: "POST", headers: headers(), body });
+
+    // Never fall back to creating a new agent quietly. The demo claims that
+    // nothing changed between replays except one config field; silently
+    // spawning a second agent would make that claim false, and would leave
+    // duplicates cluttering the dashboard that gets filmed.
+    if (!res.ok) {
+      const detail = await res.text();
+      console.error(`PATCH of agent ${existing} failed (${res.status}): ${detail.slice(0, 500)}`);
+      if (res.status === 404) {
+        console.error("The agent no longer exists. Delete .agent-id and run setup-agent again.");
+      }
+      process.exit(1);
     }
   } else {
     res = await fetch(`${base()}/agents`, { method: "POST", headers: headers(), body });
@@ -184,6 +243,42 @@ export async function upsertAgent(payload) {
 
   if (agent.id !== existing) writeAgentId(agent.id);
   return agent;
+}
+
+/**
+ * Clears the agent's response cache.
+ *
+ * Agent Studio caches completions by default, keyed on the request. That is a
+ * sensible production default and a trap while building a demo: three different
+ * injected payloads produced three byte-identical answers here, because only the
+ * first one ever reached the model. Clear the cache between acts and the replays
+ * are honest.
+ */
+export async function clearCache(agentId) {
+  const res = await fetch(`${base()}/agents/${agentId}/cache`, {
+    method: "DELETE",
+    headers: headers(),
+  });
+  if (!res.ok) {
+    console.warn(`Could not clear the cache (${res.status}). Requests still pass cache=false.`);
+    return null;
+  }
+  // A successful DELETE may come back with no body at all.
+  const body = await res.text();
+  if (!body.trim()) return 0;
+  try {
+    return JSON.parse(body).deleted ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+/** Reads back the guardrail configuration the agent is running with. */
+export async function currentGuardrail(agentId) {
+  const res = await fetch(`${base()}/agents/${agentId}`, { headers: headers() });
+  if (!res.ok) return null;
+  const agent = await res.json();
+  return agent.config?.guardrail ?? null;
 }
 
 /** Reads back the retrieval scope the agent is actually running with. */
