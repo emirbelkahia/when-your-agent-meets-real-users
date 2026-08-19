@@ -45,7 +45,11 @@ export const INTERNAL_ATTRIBUTES = ALL_ATTRIBUTES.filter(
   (a) => !HUMAN_ATTRIBUTES.includes(a)
 );
 
-/** Public to humans, withheld from the agent. Currently just the seller's copy. */
+/**
+ * Public to humans, withheld from the agent. This is `description` — the listing
+ * copy, which on a marketplace listing the seller writes and syndicates on their
+ * own schedule. It is not secret. It is simply not yours.
+ */
 export const UNTRUSTED_ATTRIBUTES = HUMAN_ATTRIBUTES.filter(
   (a) => !AGENT_ATTRIBUTES.includes(a)
 );

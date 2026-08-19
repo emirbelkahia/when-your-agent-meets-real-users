@@ -253,7 +253,7 @@ fetch('/api/products').then(r => r.json()).then(({ products }) => {
         <span class="price">${eur(p.price_eur)}</span>
         <span class="rate">★ ${p.rating} (${p.review_count})</span>
       </div>
-      ${p.seller_copy ? `<div class="sellercopy"><span>Note from the seller</span>${p.seller_copy}</div>` : ''}
+      ${p.seller_type === 'third_party' && p.description ? `<div class="sellercopy"><span>Listing copy from the seller</span>${p.description}</div>` : ''}
     </article>`).join('');
 });
 

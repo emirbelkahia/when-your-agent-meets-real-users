@@ -42,7 +42,7 @@ console.log(`Shop:  ${shop} (${records.length} records)`);
 await client.setSettings({
   indexName: INDEX_NAME,
   indexSettings: {
-    searchableAttributes: ["name", "brand", "unordered(description)", "unordered(seller_copy)", "category", "seller_name"],
+    searchableAttributes: ["name", "brand", "unordered(spec)", "unordered(description)", "category", "seller_name"],
     attributesForFaceting: ["brand", "category", "seller_type", "searchable(seller_name)", "in_stock"],
     customRanking: ["desc(review_count)", "desc(rating)"],
     attributesToSnippet: ["description:40"],
