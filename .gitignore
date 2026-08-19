@@ -5,3 +5,4 @@ recordings/
 *.mov
 *.mp4
 .DS_Store
+.agent-id

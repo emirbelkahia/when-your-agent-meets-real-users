@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nordvik Market — Camping</title>
+<style>
+  :root {
+    --ink: #14181d;
+    --muted: #5f6b78;
+    --line: #e3e7ec;
+    --bg: #ffffff;
+    --soft: #f6f8fa;
+    --accent: #1c5d4a;
+    --accent-soft: #e8f2ee;
+    --warn: #8a4b1f;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header {
+    border-bottom: 1px solid var(--line);
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(8px);
+    z-index: 5;
+  }
+  .brand { font-weight: 650; font-size: 17px; letter-spacing: -.01em; display: flex; align-items: center; gap: 9px; }
+  .brand svg { width: 20px; height: 20px; }
+  nav { display: flex; gap: 22px; color: var(--muted); font-size: 14px; }
+  nav span:first-child { color: var(--ink); font-weight: 550; }
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 18px; color: var(--muted); }
+  .searchbox {
+    border: 1px solid var(--line); border-radius: 7px; padding: 7px 12px;
+    color: var(--muted); font-size: 13px; width: 210px; background: var(--soft);
+  }
+
+  .strip {
+    background: var(--accent-soft); color: var(--accent);
+    font-size: 13px; text-align: center; padding: 9px; font-weight: 500;
+  }
+
+  main { max-width: 1180px; margin: 0 auto; padding: 34px 28px 96px; }
+  h1 { font-size: 25px; margin: 0 0 4px; letter-spacing: -.02em; font-weight: 650; }
+  .count { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(228px, 1fr)); gap: 26px 22px; }
+  .card { display: flex; flex-direction: column; }
+  .thumb {
+    aspect-ratio: 4 / 3; background: var(--soft); border: 1px solid var(--line);
+    border-radius: 9px; display: grid; place-items: center; margin-bottom: 11px; position: relative;
+  }
+  .thumb svg { width: 62px; height: 62px; stroke: #9aa6b2; stroke-width: 1.2; fill: none; }
+  .flag {
+    position: absolute; top: 9px; left: 9px; background: #fff; border: 1px solid var(--line);
+    border-radius: 5px; font-size: 10.5px; padding: 3px 6px; color: var(--muted); font-weight: 550;
+    letter-spacing: .02em; text-transform: uppercase;
+  }
+  .oos { position: absolute; inset: 0; background: rgba(255,255,255,.62); border-radius: 9px;
+         display: grid; place-items: center; font-size: 12px; color: var(--muted); font-weight: 600; }
+  .name { font-weight: 550; font-size: 14.5px; letter-spacing: -.005em; }
+  .seller { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .row { display: flex; align-items: baseline; gap: 9px; margin-top: 7px; }
+  .price { font-weight: 650; font-size: 15px; }
+  .rate { color: var(--muted); font-size: 12.5px; }
+
+  /* Chat widget */
+  #bubble {
+    position: fixed; right: 26px; bottom: 26px; width: 54px; height: 54px; border-radius: 50%;
+    background: var(--accent); border: 0; cursor: pointer; display: grid; place-items: center;
+    box-shadow: 0 8px 26px rgba(20,24,29,.22); z-index: 20;
+  }
+  #bubble svg { width: 24px; height: 24px; stroke: #fff; stroke-width: 1.6; fill: none; }
+  #panel {
+    position: fixed; right: 26px; bottom: 26px; width: 392px; max-height: 74vh;
+    background: #fff; border: 1px solid var(--line); border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(20,24,29,.20); display: none; flex-direction: column;
+    z-index: 21; overflow: hidden;
+  }
+  #panel.open { display: flex; }
+  .chat-head {
+    padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: #2ea36b; }
+  .chat-head strong { font-size: 14px; font-weight: 600; }
+  .chat-head .sub { color: var(--muted); font-size: 12px; }
+  .chat-head button { margin-left: auto; border: 0; background: none; cursor: pointer; color: var(--muted); font-size: 18px; line-height: 1; }
+  #log { padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+  .msg { max-width: 88%; font-size: 14px; line-height: 1.55; white-space: pre-wrap; }
+  .msg.user { align-self: flex-end; background: var(--accent); color: #fff; padding: 9px 13px; border-radius: 14px 14px 3px 14px; }
+  .msg.bot { align-self: flex-start; background: var(--soft); padding: 10px 13px; border-radius: 14px 14px 14px 3px; }
+  .msg.bot.err { background: #fdf0ea; color: var(--warn); }
+  .typing { display: flex; gap: 4px; align-self: flex-start; padding: 12px 14px; background: var(--soft); border-radius: 14px; }
+  .typing i { width: 6px; height: 6px; border-radius: 50%; background: #b3bdc7; animation: b 1.2s infinite; }
+  .typing i:nth-child(2) { animation-delay: .18s; }
+  .typing i:nth-child(3) { animation-delay: .36s; }
+  @keyframes b { 0%,60%,100% { opacity: .32 } 30% { opacity: 1 } }
+  .chat-foot { border-top: 1px solid var(--line); padding: 11px; display: flex; gap: 8px; }
+  .chat-foot input { flex: 1; border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; font: inherit; font-size: 14px; outline: none; }
+  .chat-foot input:focus { border-color: var(--accent); }
+  .chat-foot button { border: 0; background: var(--accent); color: #fff; border-radius: 8px; padding: 0 15px; cursor: pointer; font-weight: 550; font-size: 14px; }
+  .chat-foot button:disabled { opacity: .45; cursor: default; }
+</style>
+</head>
+<body>
+
+<div class="strip">Free standard delivery on orders over €75 · Standard 3–5 working days</div>
+
+<header>
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#1c5d4a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 18l5.5-7.5 3.5 4.5 3-4 8 7z"/><circle cx="17" cy="6" r="2"/>
+    </svg>
+    Nordvik Market
+  </div>
+  <nav><span>Camping</span><span>Hiking</span><span>Apparel</span><span>Sale</span></nav>
+  <div class="header-right">
+    <div class="searchbox">Search the store…</div>
+    <span>Account</span><span>Basket (0)</span>
+  </div>
+</header>
+
+<main>
+  <h1>Camping</h1>
+  <div class="count" id="count">Loading…</div>
+  <div class="grid" id="grid"></div>
+</main>
+
+<button id="bubble" aria-label="Open the assistant">
+  <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12a8 8 0 0 1-8 8H8l-5 3 1.4-4.2A8 8 0 1 1 21 12z"/>
+  </svg>
+</button>
+
+<div id="panel">
+  <div class="chat-head">
+    <span class="dot"></span>
+    <div>
+      <strong>Nordvik Assistant</strong>
+      <div class="sub">Product and delivery questions</div>
+    </div>
+    <button id="close" aria-label="Close">&times;</button>
+  </div>
+  <div id="log">
+    <div class="msg bot">Hi! Ask me anything about our camping gear — sizing, stock, delivery.</div>
+  </div>
+  <div class="chat-foot">
+    <input id="q" placeholder="Ask a question…" autocomplete="off">
+    <button id="send">Send</button>
+  </div>
+</div>
+
+<script>
+/* Category line-art, chosen by keyword. Inline so the page has no network
+   dependencies at all — a screencast should never wait on an asset. */
+const ICONS = {
+  tent:    '<path d="M3 19 12 5l9 14z"/><path d="M12 5v14"/><path d="m8 19 4-6 4 6"/>',
+  bag:     '<rect x="3" y="7" width="18" height="11" rx="5.5"/><path d="M8 7v11M16 7v11"/>',
+  stove:   '<path d="M12 3c1.5 3-1.5 4 0 7 2-1 3-3.5 2-5"/><path d="M6 12h12v3a6 6 0 0 1-12 0z"/>',
+  pot:     '<path d="M5 9h14v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z"/><path d="M3 11h2M19 11h2"/>',
+  pack:    '<path d="M8 7V5a4 4 0 0 1 8 0v2"/><rect x="5" y="7" width="14" height="14" rx="3"/><path d="M9 13h6"/>',
+  jacket:  '<path d="M9 4 5 7v13h14V7l-4-3"/><path d="M12 4v16"/><path d="M9 4c0 2 1.4 3 3 3s3-1 3-3"/>',
+  poles:   '<path d="M8 3v18M16 3v18"/><path d="M6 8h4M14 8h4"/>',
+  lamp:    '<circle cx="12" cy="11" r="4"/><path d="M4 11h2M18 11h2M12 3v2M12 19v2"/>',
+  mat:     '<rect x="3" y="9" width="18" height="7" rx="3.5"/><path d="M7 9v7M12 9v7M17 9v7"/>',
+  filter:  '<path d="M6 4h12l-5 6v8l-2 2v-10z"/>',
+  chair:   '<path d="M6 4v9h12V4"/><path d="M6 13 4 21M18 13l2 8M8 17h8"/>',
+  table:   '<path d="M3 9h18"/><path d="M5 9v11M19 9v11"/><path d="M3 9 12 4l9 5"/>',
+  lantern: '<path d="M9 3h6"/><path d="M10 3v3h4V3"/><rect x="7" y="6" width="10" height="11" rx="2.5"/><path d="M9 17v3M15 17v3"/>',
+  sock:    '<path d="M9 3h5v9l4 4a3.5 3.5 0 0 1-5 5l-6-6V3z"/>',
+  base:    '<path d="M8 4 5 6v14h14V6l-3-2"/><path d="M8 4h8"/>',
+  generic: '<circle cx="12" cy="12" r="8"/>'
+};
+const pick = (name) => {
+  const n = name.toLowerCase();
+  if (n.includes('lantern')) return ICONS.lantern;
+  if (n.includes('tent')) return ICONS.tent;
+  if (n.includes('sleeping bag')) return ICONS.bag;
+  if (n.includes('stove')) return ICONS.stove;
+  if (n.includes('pot')) return ICONS.pot;
+  if (n.includes('backpack') || n.includes('pack')) return ICONS.pack;
+  if (n.includes('jacket') || n.includes('shell')) return ICONS.jacket;
+  if (n.includes('poles')) return ICONS.poles;
+  if (n.includes('headlamp')) return ICONS.lamp;
+  if (n.includes('mat')) return ICONS.mat;
+  if (n.includes('filter') || n.includes('bladder')) return ICONS.filter;
+  if (n.includes('chair')) return ICONS.chair;
+  if (n.includes('table')) return ICONS.table;
+  if (n.includes('socks')) return ICONS.sock;
+  if (n.includes('base layer')) return ICONS.base;
+  return ICONS.generic;
+};
+
+const eur = (n) => '€' + n.toFixed(2).replace('.00', '');
+
+fetch('/api/products').then(r => r.json()).then(({ products }) => {
+  document.getElementById('count').textContent = products.length + ' products';
+  document.getElementById('grid').innerHTML = products.map(p => `
+    <article class="card">
+      <div class="thumb">
+        ${p.seller_type === 'third_party' ? '<span class="flag">Marketplace</span>' : ''}
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">${pick(p.name)}</svg>
+        ${p.in_stock ? '' : '<div class="oos">Out of stock</div>'}
+      </div>
+      <div class="name">${p.name}</div>
+      <div class="seller">${p.seller_type === 'third_party' ? 'Sold by ' + p.seller_name : p.brand}</div>
+      <div class="row">
+        <span class="price">${eur(p.price_eur)}</span>
+        <span class="rate">★ ${p.rating} (${p.review_count})</span>
+      </div>
+    </article>`).join('');
+});
+
+const panel = document.getElementById('panel');
+const log = document.getElementById('log');
+const q = document.getElementById('q');
+const send = document.getElementById('send');
+
+document.getElementById('bubble').onclick = () => { panel.classList.add('open'); q.focus(); };
+document.getElementById('close').onclick = () => panel.classList.remove('open');
+
+function add(text, who, isErr) {
+  const el = document.createElement('div');
+  el.className = 'msg ' + who + (isErr ? ' err' : '');
+  el.textContent = text;
+  log.appendChild(el);
+  log.scrollTop = log.scrollHeight;
+  return el;
+}
+
+async function ask() {
+  const text = q.value.trim();
+  if (!text) return;
+  q.value = '';
+  send.disabled = true;
+  add(text, 'user');
+
+  const dots = document.createElement('div');
+  dots.className = 'typing';
+  dots.innerHTML = '<i></i><i></i><i></i>';
+  log.appendChild(dots);
+  log.scrollTop = log.scrollHeight;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text })
+    });
+    const data = await res.json();
+    dots.remove();
+    if (!res.ok) add(data.error || 'Something went wrong.', 'bot', true);
+    else add(data.answer, 'bot');
+  } catch (e) {
+    dots.remove();
+    add('Could not reach the assistant: ' + e.message, 'bot', true);
+  }
+  send.disabled = false;
+  q.focus();
+}
+
+send.onclick = ask;
+q.onkeydown = (e) => { if (e.key === 'Enter') ask(); };
+</script>
+</body>
+</html>
