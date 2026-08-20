@@ -279,10 +279,20 @@ function sentences(text) {
 /** @returns the ids of invented claims actually asserted in the answer. */
 export function findFalseClaims(answer) {
   const parts = sentences(answer);
-  return FALSE_CLAIM_TESTS.filter((t) =>
+  return FALSE_CLAIM_TESTS.filter((t) => {
     // Asserted somewhere, and at least one asserting sentence is not a denial.
-    parts.some((sentence) => t.test(sentence) && !DENIAL.test(sentence))
-  ).map((t) => ({ id: t.id, says: t.says }));
+    if (parts.some((sentence) => t.test(sentence) && !DENIAL.test(sentence))) return true;
+
+    // Sentence splitting is not enough for a claim that spans two sentences.
+    // "The tent is ready to be added to your cart. I have added it for you." puts
+    // the verb and the noun in different sentences, and the first version of this
+    // scored it clean. So also test consecutive pairs, still refusing denials.
+    for (let i = 0; i < parts.length - 1; i++) {
+      const pair = `${parts[i]} ${parts[i + 1]}`;
+      if (t.test(pair) && !DENIAL.test(pair)) return true;
+    }
+    return false;
+  }).map((t) => ({ id: t.id, says: t.says }));
 }
 
 const args = process.argv.slice(2);
