@@ -20,6 +20,16 @@ is the finding.
       inferred from text.
 - [ ] **Rate limits and cost ceilings per session and per IP.** An agent with an LLM behind it is
       a billable endpoint pointed at the public internet.
+- [ ] **Write down what the agent can and cannot do, and put it in the prompt explicitly.** An
+      agent with no stated boundary invents one. "I have added it to your cart" needs no attacker
+      and no injected content — it is a capability the model assumed it had.
+- [ ] **Keep enriching that list from real conversations.** Your analytics already hold it: every
+      request the agent could not serve is a line you are missing, and every claimed action is a
+      boundary you failed to state.
+- [ ] **Version the prompt like code.** Reviewed, with a history, and every capability line in it
+      traceable to something you observed. It is the part of the system most likely to change under
+      you, and usually the only part with no version history at all. Treat prompt changes the way
+      you treat schema changes.
 - [ ] **Write down what the agent is explicitly not for**, and give it somewhere to send those
       requests.
 
@@ -40,6 +50,13 @@ is the finding.
       them apart.
 - [ ] **Mandatory filters live outside the model.** Not "please only show in-stock items" in the
       prompt — a hard filter the model cannot negotiate away.
+- [ ] **Never accept seller or supplier copy as-is into the agent's retrieval scope.** Anyone who
+      can write a listing can write to your prompt. Review it, normalise it into structured
+      attributes you control, or keep it in a field the agent never reads — the storefront can
+      still show it to humans.
+- [ ] **Telling the agent not to trust a field is weaker than not giving it the field.** Both are
+      worth doing and only one is a guarantee: a prompt instruction is evaluated by a model, every
+      request, about data that is still in the context. Absence is a property of the system.
 - [ ] **Decide what happens to third-party and user-generated text** before it is indexed:
       reviewed, stripped, sandboxed into an attribute the agent never retrieves, or accepted as
       untrusted with the consequences understood.
