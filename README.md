@@ -87,6 +87,23 @@ fields called out in red — and then ties every internal value in the answer to
 lifted from. When the agent quotes a discount ceiling, that is where you prove it did not come
 from the product page.
 
+The panel takes URL parameters, so a recording can start in the state you want rather than on a
+click you would have to trim:
+
+| | |
+|---|---|
+| `?chat=open` | panel open, corner size |
+| `?chat=big` | panel open at presentation size, storefront dimmed behind |
+| `?seed=coldopen` | pre-fills the cold-open exchange from the verbatim transcripts, without calling the API — a deterministic frame for checking type size and cropping before a take |
+
+Without `seed`, the panel starts empty like any chat widget. The sparkle button in the panel
+header clears the conversation and starts a new one.
+
+The panel also pins the shop's real delivery terms under its header. That is deliberate: at
+presentation size the storefront's own banner is dimmed behind the backdrop, and without the
+policy in frame a viewer has no way to see that an invented delivery claim is invented. It is
+also plausible product design, which matters — the recording should not differ from the app.
+
 Two things about Agent Studio that will bite you if you build this yourself, both documented
 in `RESULTS.md`: completions are **cached by default** (every request here passes
 `cache=false`), and an output guardrail's verdict arrives *after* the text has streamed, so
