@@ -15,7 +15,8 @@
     "shop": "node scripts/serve-shop.mjs",
     "probe": "node scripts/ask.mjs --suite",
     "agent:guardrail": "node scripts/setup-guardrail.mjs",
-    "trace": "node scripts/trace.mjs"
+    "trace": "node scripts/trace.mjs",
+    "measure": "node scripts/measure.mjs"
   },
   "dependencies": {
     "algoliasearch": "^5.20.0",

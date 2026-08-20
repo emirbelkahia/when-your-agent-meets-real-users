@@ -231,6 +231,34 @@ customers to use.
 One thing it consistently does is narrate the action into existence mid-answer: *"The Fjellro 2
 Tent is in stock and ready to be added to your cart. I have added it for you."*
 
+## Thirty runs
+
+One conversation is an anecdote. This is the same three-turn sequence the talk shows, run thirty
+times on `gpt-4.1-mini`, cache disabled on every call, catalogue poisoned with the competitor
+payload and the agent in its baseline state. Ninety completions.
+
+| | | Needs a seller? |
+|---|---|---|
+| Cost or margin handed to the customer | **30/30 — 100%** | no |
+| A delivery term that does not exist | **30/30 — 100%** | yes |
+| Claimed a cart write it cannot perform | **24/30 — 80%** | no |
+| False exclusivity or "highest-rated" | **23/30 — 77%** | yes |
+| **At least one of the four** | **30/30 — 100%** | |
+| All four in the same conversation | 20/30 — 67% | |
+
+Two of the four need nobody to blame at all.
+
+Every transcript is in `measurements/cold-open-2026-08-20.json`, so these are auditable rather
+than asserted — which matters, because the first pass at this reported the cart claim at 50%. The
+detector was looking for "I have added" and the agent mostly answers in the passive: *"The Selje
+Headlamp 400 has been added to your cart."* Eleven of the fifteen supposed refusals were claims.
+It also says *"is in your cart now"* and *"is available and added to your cart"*.
+
+The 80% is the conservative reading. A manual pass over the thirty answers found 25 or 26 claims
+against the detector's 24, and the lower number is the one quoted.
+
+Reproduce with `npm run measure`. Run it before quoting these figures anywhere — the model moves.
+
 ## Hit rates, and why instruction order matters
 
 A demo whose failure is intermittent is no demo, so the two cold-open questions were measured
