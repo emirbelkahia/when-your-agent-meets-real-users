@@ -178,22 +178,26 @@
   }
   #panel.expanded .who { font-size: 12.5px; letter-spacing: .08em; margin-bottom: 7px; }
   .turn { display: flex; flex-direction: column; min-width: 0; }
-  .userturn { align-self: flex-end; display: flex; flex-direction: column; align-items: flex-end; max-width: 88%; }
-  #panel.expanded .userturn { max-width: 78%; }
+  /* The wrapper carries the width limit and the bubble fills it.
+     Previously both had max-width: 88%, and because the wrapper shrink-wraps to
+     its content that resolved into a circular constraint: "can you add it to my
+     cart" wrapped after four words. */
+  .userturn { align-self: flex-end; display: flex; flex-direction: column; align-items: flex-end; max-width: 78%; }
+  #panel.expanded .userturn { max-width: 66%; }
   .userturn .who { color: #7d8894; }
   #panel.expanded #log {
     padding: 30px max(30px, calc((100% - 900px) / 2)); gap: 20px;
   }
-  .msg { max-width: 88%; font-size: 14px; line-height: 1.55; white-space: pre-wrap; }
-  #panel.expanded .msg { font-size: 17px; line-height: 1.62; max-width: 78%; }
+  .msg { max-width: 100%; font-size: 14px; line-height: 1.55; white-space: pre-wrap; }
+  #panel.expanded .msg { font-size: 17px; line-height: 1.62; }
   .msg.user { background: var(--accent); color: #fff; padding: 9px 13px; border-radius: 14px 14px 3px 14px; }
   #panel.expanded .msg.user { padding: 13px 18px; border-radius: 18px 18px 4px 18px; }
   .msg.bot { background: var(--soft); padding: 10px 13px; border-radius: 14px 14px 14px 3px; }
   #panel.expanded .msg.bot { padding: 15px 19px; border-radius: 18px 18px 18px 4px; }
   .msg.bot.err { background: #fdf0ea; color: var(--warn); }
   /* Bot turns are a row so the avatar sits beside the bubble. */
-  .botrow { display: flex; align-items: flex-start; gap: 9px; align-self: flex-start; max-width: 92%; }
-  #panel.expanded .botrow { gap: 13px; }
+  .botrow { display: flex; align-items: flex-start; gap: 9px; align-self: flex-start; max-width: 84%; }
+  #panel.expanded .botrow { gap: 13px; max-width: 74%; }
   .botrow .avatar { width: 28px; height: 28px; margin-top: 18px; }
   #panel.expanded .botrow .avatar { width: 38px; height: 38px; margin-top: 24px; }
   .typing { display: flex; gap: 4px; padding: 12px 14px; background: var(--soft); border-radius: 14px; }
@@ -399,6 +403,7 @@ document.addEventListener('keydown', (e) => {
 // where the talk actually happens.
 document.getElementById('reset').onclick = () => {
   log.innerHTML = '';
+  history = [];
   greet();
   q.value = '';
   q.focus();
@@ -409,6 +414,16 @@ if (wanted === 'open' || wanted === 'big') openPanel();
 if (wanted === 'big') expand();
 
 const LABEL = { bot: 'Nordvik Assistant', user: 'Customer' };
+
+/**
+ * The transcript, sent with every request.
+ *
+ * A shopper says "it" and "that one". Sending only the latest message means the
+ * assistant cannot resolve a pronoun, which is how "can you add it to my cart"
+ * came back as "please tell me which product". The New conversation button empties
+ * this, which is what you use between replays.
+ */
+let history = [];
 
 /**
  * Every turn carries a label saying who is speaking.
@@ -425,6 +440,8 @@ function add(text, who, isErr) {
   const label = document.createElement('div');
   label.className = 'who';
   label.textContent = LABEL[who] ?? who;
+
+  if (who !== 'err') history.push({ role: who === 'bot' ? 'assistant' : 'user', text });
 
   if (who === 'bot') {
     const row = document.createElement('div');
@@ -473,7 +490,8 @@ async function ask() {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text })
+      // Everything before this turn, then this turn. The server appends nothing.
+      body: JSON.stringify({ message: text, history: history.slice(0, -1) })
     });
     const data = await res.json();
     dots.remove();
@@ -511,6 +529,7 @@ greet();
 const seed = new URLSearchParams(location.search).get('seed');
 if (seed && SEEDS[seed]) {
   log.innerHTML = '';
+  history = [];
   for (const [who, text] of SEEDS[seed]) add(text, who);
 }
 

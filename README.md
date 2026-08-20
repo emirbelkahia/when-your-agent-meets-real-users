@@ -81,6 +81,9 @@ npm run trace "..."   # what the agent asked the index, what it got back, what i
 npm run probe         # the whole question suite in catalog/probes.json
 ```
 
+**Click New conversation between replays.** The panel keeps the transcript and sends it with each
+request, so a replay inherits whatever came before it. The sparkle button in the header empties it.
+
 `trace` is the one that settles arguments. Agent Studio's response stream carries the records
 the index handed back, so it prints the exact bytes the model was reasoning over — internal
 fields called out in red — and then ties every internal value in the answer to the field it was

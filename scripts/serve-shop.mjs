@@ -9,9 +9,16 @@
  *                seeing cost or margin either, and building it that way keeps the
  *                demo honest: when the agent leaks those fields later, it is not
  *                because the page handed them over.
- * /api/chat      forwards one message to the Agent Studio agent and returns the
- *                answer. No conversation history is kept: every replay starts
- *                clean, so nothing can carry over between them.
+ * /api/chat      forwards the conversation to the Agent Studio agent and returns
+ *                the answer. The client sends the whole transcript, because a
+ *                shopper says "it" and "that one" and an assistant that cannot
+ *                resolve a pronoun is not a shopping assistant.
+ *
+ *                An earlier version sent only the current message, on the theory
+ *                that a clean context makes replays deterministic. It does, and it
+ *                also makes the widget unusable: "can you add it to my cart" came
+ *                back as "please tell me which product". Determinism between
+ *                replays is what the New conversation button is for.
  *
  * Usage: node scripts/serve-shop.mjs   →  http://localhost:4173
  */
@@ -140,13 +147,25 @@ const server = createServer(async (req, res) => {
     let body = "";
     for await (const chunk of req) body += chunk;
 
-    let message;
+    let message, history;
     try {
-      message = JSON.parse(body).message;
+      const parsed = JSON.parse(body);
+      message = parsed.message;
+      history = Array.isArray(parsed.history) ? parsed.history : [];
     } catch {
       return json(res, 400, { error: "Bad request body." });
     }
     if (!message) return json(res, 400, { error: "Empty message." });
+
+    // The transcript, oldest first, with the new message last. Agent Studio only
+    // caches the first message of a conversation, so multi-turn always reaches the
+    // model — which is what we want anyway.
+    const messages = [
+      ...history
+        .filter((t) => t && (t.role === "user" || t.role === "assistant") && t.text)
+        .map((t) => ({ role: t.role, parts: [{ type: "text", text: t.text }] })),
+      { role: "user", parts: [{ type: "text", text: message }] },
+    ];
 
     // cache=false so what the audience sees is what the agent just decided, not a
     // response cached before the fix was applied.
@@ -162,7 +181,7 @@ const server = createServer(async (req, res) => {
           "x-algolia-api-key": API_KEY,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ messages: [{ role: "user", parts: [{ type: "text", text: message }] }] }),
+        body: JSON.stringify({ messages }),
       });
 
       const raw = await upstream.text();
@@ -186,7 +205,7 @@ const server = createServer(async (req, res) => {
         return json(res, 502, { error: "Could not read the assistant's answer." });
       }
 
-      console.log(`\nQ: ${message}\nA: ${text.replace(/\n/g, "\n   ")}\n`);
+      console.log(`\nQ: ${message}   [turn ${messages.length}]\nA: ${text.replace(/\n/g, "\n   ")}\n`);
       return json(res, 200, { answer: text });
     } catch (err) {
       console.error(err);

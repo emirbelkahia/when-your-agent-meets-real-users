@@ -46,6 +46,25 @@ await client.setSettings({
     attributesForFaceting: ["brand", "category", "seller_type", "searchable(seller_name)", "in_stock"],
     customRanking: ["desc(review_count)", "desc(rating)"],
     attributesToSnippet: ["description:40"],
+
+    // A shopper types "ravnli cam lantern 600" and means the Ravnli Camp Lantern
+    // 600. Two Algolia defaults stop that working, and both defaults are right for
+    // a search box with query suggestions in front of it and wrong for an agent
+    // typing a query on a customer's behalf:
+    //
+    //   minWordSizefor1Typo defaults to 4, so a three-letter word gets no typo
+    //   tolerance at all and "cam" never reaches "camp".
+    //
+    //   removeWordsIfNoResults defaults to none, so every word has to match or
+    //   the whole query returns nothing.
+    //
+    // This is the "agentic search needs different settings from keyword search"
+    // point, met in the wild: the agent inherited a storefront configuration and
+    // then could not find a product a human would have found.
+    // Note the lowercase f. The API really does spell it minWordSizefor1Typo.
+    minWordSizefor1Typo: 3,
+    minWordSizefor2Typos: 7,
+    removeWordsIfNoResults: "allOptional",
   },
 });
 console.log("Index settings applied.");
