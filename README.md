@@ -117,6 +117,19 @@ clip and wastes takes. The typing indicator and the render are identical to the 
 filmed take does not misrepresent how the product behaves, and once the script is exhausted the
 panel goes back to the live agent.
 
+**One elision, and it is the only one.** Take 1's answer had two paragraphs of chair and table
+specifications between the opening line and the pitch — weights, load ratings, review counts —
+which is noise on a projected screen and carries none of the argument. Those two paragraphs are
+removed. Every claim is untouched, and the unedited answer is kept next to the trimmed one in the
+source as `full`, so the cut is visible where it was made and the original is in `measurements/`.
+
+What that costs, stated plainly: a real agent buries the damaging claim in the fourth paragraph
+and nobody reads that far. Trimming makes it look more pointed than it was.
+
+Two other framing helpers, both for checking a shot before recording it rather than for the
+recording itself: `?seed=take1|take2|take3` renders one armed exchange already answered, and
+`?seed=typing` renders the thinking indicator on its own.
+
 The talk says this out loud rather than hiding it: the slide after the cold open gives the rates
 over thirty runs and states that what the audience watched was one of them.
 
