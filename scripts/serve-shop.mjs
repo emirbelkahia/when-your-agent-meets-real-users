@@ -10,9 +10,11 @@
  *                demo honest: when the agent leaks those fields later, it is not
  *                because the page handed them over.
  * /api/chat      forwards the conversation to the Agent Studio agent and returns
- *                the answer. The client sends the whole transcript, because a
- *                shopper says "it" and "that one" and an assistant that cannot
- *                resolve a pronoun is not a shopping assistant.
+ *                the answer, plus the objectIDs of the retrieved products the
+ *                answer named, so the widget can show cards instead of prose. The
+ *                client sends the whole transcript, because a shopper says "it" and
+ *                "that one" and an assistant that cannot resolve a pronoun is not a
+ *                shopping assistant.
  *
  *                An earlier version sent only the current message, on the theory
  *                that a clean context makes replays deterministic. It does, and it
@@ -130,7 +132,50 @@ function parseAgentStream(raw) {
     (f) => f.type === "data-guardrail-violation" || f.type === "guardrailViolation"
   );
 
-  return { text, violation: violation?.data ?? violation ?? null };
+  // Everything the agent's searches handed back, in the order it arrived.
+  const hits = frames
+    .filter((f) => f.type === "tool-output-available")
+    .flatMap((f) => f.output?.hits ?? []);
+
+  return { text, violation: violation?.data ?? violation ?? null, hits };
+}
+
+const norm = (s) => String(s ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+/**
+ * Which retrieved products did the answer actually talk about.
+ *
+ * Two rules, both deliberate.
+ *
+ * Only retrieved products are eligible. A card is the interface asserting "this is
+ * the thing I mean", and the only defensible source for that is what the agent's own
+ * search returned — not a name the model produced, which is exactly the failure mode
+ * the talk is about.
+ *
+ * Only products the answer names get a card. Showing every hit would put products on
+ * screen that the agent considered and rejected, which reads as a recommendation it
+ * never made. A missed card is a cosmetic loss; an unearned one is a false claim.
+ *
+ * Only objectIDs cross to the browser. The retrieved hits carry internal_cost_eur,
+ * supplier_margin_pct and the rest, and the page has no business holding them: the
+ * demo's whole argument depends on a leak being the agent's doing rather than the
+ * UI's. The client renders the card from /api/products, which is public fields only.
+ */
+function namedProducts(text, hits) {
+  const haystack = norm(text);
+  const out = [];
+  for (const hit of hits) {
+    if (!hit?.objectID || !hit?.name || out.includes(hit.objectID)) continue;
+    const full = norm(hit.name);
+    // A relaxed form too, so "Kvist Down Sleeping Bag -5°C" still matches when the
+    // model writes the temperature its own way. Three consecutive words from a
+    // product name is a high enough bar not to collide.
+    const partial = full.split(" ").slice(0, 3).join(" ");
+    if (haystack.includes(full) || (partial.split(" ").length === 3 && haystack.includes(partial))) {
+      out.push(hit.objectID);
+    }
+  }
+  return out.slice(0, 3);
 }
 
 function json(res, code, body) {
@@ -235,7 +280,7 @@ const server = createServer(async (req, res) => {
         return json(res, 502, { error: `Assistant unavailable (${upstream.status}).` });
       }
 
-      const { text, violation } = parseAgentStream(raw);
+      const { text, violation, hits } = parseAgentStream(raw);
 
       if (violation) {
         const fallback =
@@ -250,8 +295,10 @@ const server = createServer(async (req, res) => {
         return json(res, 502, { error: "Could not read the assistant's answer." });
       }
 
-      console.log(`\nQ: ${message}   [turn ${messages.length}]\nA: ${text.replace(/\n/g, "\n   ")}\n`);
-      return json(res, 200, { answer: text });
+      const products = namedProducts(text, hits);
+      console.log(`\nQ: ${message}   [turn ${messages.length}]\nA: ${text.replace(/\n/g, "\n   ")}`);
+      console.log(`   retrieved ${hits.length}, carded ${products.length}${products.length ? ": " + products.join(", ") : ""}\n`);
+      return json(res, 200, { answer: text, products });
     } catch (err) {
       console.error(err);
       return json(res, 502, { error: "Could not reach the assistant." });

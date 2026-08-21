@@ -133,10 +133,34 @@ over thirty runs and states that what the audience watched was one of them.
 Without `seed`, the panel starts empty like any chat widget. The sparkle button in the panel
 header clears the conversation and starts a new one.
 
+**The assistant answers with product cards, not just prose.** Agent Studio returns the retrieved
+hits alongside the text, so the widget shows a card — picture, name, seller, price — for each
+retrieved product the answer names. Clicking one opens that product page and drops the panel back
+to widget size, which on stage is the hinge between the two acts: the recommendation, then the
+seller description it came from.
+
+Two rules behind it, both load-bearing for the demo's honesty. Only products the agent's own search
+returned are eligible, and only the ones its answer names get a card — a card is the interface
+asserting "this is what I mean", and it should never assert something the retrieval did not
+support. And only objectIDs cross to the browser: the retrieved hits carry `internal_cost_eur` and
+`supplier_margin_pct`, the card is rendered from `/api/products` which is public fields only, so
+when the agent discloses a margin later it is the agent doing it and not the page leaking it.
+
+Which is also the uncomfortable observation: the card is trustworthy in exactly the place the
+sentence above it is not. Structured retrieval output is the shop's data. The prose is where the
+seller's claims get laundered into the brand's voice.
+
 The panel also pins the shop's real delivery terms under its header. That is deliberate: at
 presentation size the storefront's own banner is dimmed behind the backdrop, and without the
 policy in frame a viewer has no way to see that an invented delivery claim is invented. It is
 also plausible product design, which matters — the recording should not differ from the app.
+
+**A bug worth repeating, because it cost an hour and looked like nothing.** The chat's transcript
+array was called `history`, which shadowed `window.history` for the whole script. `showProduct`
+rendered fine — the render runs first — and then threw on `history.pushState`, so the URL never
+updated and the two handlers attached after that line, the breadcrumb back link and Add to basket,
+were never wired up. A product page that opens correctly with a dead back button and a dead buy
+button, from a variable name. It is now `transcript`.
 
 Two things about Agent Studio that will bite you if you build this yourself, both documented
 in `RESULTS.md`: completions are **cached by default** (every request here passes
