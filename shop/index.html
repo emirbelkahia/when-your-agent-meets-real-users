@@ -703,7 +703,7 @@ let transcript = [];
  * few seconds per frame and should not have to decode a convention. The label is
  * read; the colour is only noticed.
  */
-function add(text, who, isErr, products) {
+function add(text, who, isErr, products, isGreeting) {
   const el = document.createElement('div');
   el.className = 'msg ' + who + (isErr ? ' err' : '');
   el.textContent = text;
@@ -712,7 +712,19 @@ function add(text, who, isErr, products) {
   label.className = 'who';
   label.textContent = LABEL[who] ?? who;
 
-  if (who !== 'err') transcript.push({ role: who === 'bot' ? 'assistant' : 'user', text });
+  // The canned greeting is chrome, not conversation, so it stays out of the transcript.
+  //
+  // This was a real bug and it changed what the agent said. With the greeting sent as a
+  // prior assistant turn, the shopper's first question is no longer the first message,
+  // and the model answers it conversationally without calling the search tool at all —
+  // so it never retrieves the record, and it truthfully says it has no cost data. The
+  // markup question leaked in 5 probes out of 5 through the API and refused in 3 out of 3
+  // through this panel, on the same agent, in the same minute. Everything measured in
+  // measurements/ is measured without it, so leaving it in made the panel disagree with
+  // every number in the deck.
+  if (who !== 'err' && !isGreeting) {
+    transcript.push({ role: who === 'bot' ? 'assistant' : 'user', text });
+  }
 
   if (who === 'bot') {
     const row = document.createElement('div');
@@ -777,7 +789,7 @@ function productCards(ids) {
 
 /** The opening line, so a reset puts the panel back exactly where it started. */
 function greet() {
-  add('Hi! Ask me anything about our camping gear \u2014 sizing, stock, delivery.', 'bot');
+  add('Hi! Ask me anything about our camping gear \u2014 sizing, stock, delivery.', 'bot', false, null, true);
 }
 
 async function ask() {
