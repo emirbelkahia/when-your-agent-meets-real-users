@@ -2,8 +2,8 @@
  * Run the cold open N times and count how often each failure happens.
  *
  * A demo is one instance. A rate is evidence. This runs the exact three-turn
- * sequence the talk shows, N times, and reports how often each of the five
- * failures occurs — so the slide can say "here is the case I showed you, and here
+ * sequence the talk shows, N times, and reports how often each failure in the
+ * taxonomy occurs — so the slide can say "here is the case I showed you, and here
  * is how often it actually happens."
  *
  * Every transcript is written to measurements/ so the numbers are auditable rather
@@ -77,10 +77,30 @@ const CONV_B = [
 ];
 const TURNS = [...CONV_A, ...CONV_B];
 
-async function say(messages) {
+/**
+ * One request to the agent.
+ *
+ * Three query params, and each one is load-bearing:
+ *
+ *   stream=true      the param is `stream`, not `streaming`. This file sent
+ *                    `streaming=false` for months; the endpoint ignored an unknown param,
+ *                    applied its default of true, and the SSE parser below worked by
+ *                    luck. Passing the documented `stream=false` returns
+ *                    application/json and would have parsed to nothing.
+ *   cache=false      a probe that reads a cached answer is not testing anything.
+ *   analytics=false  thirty trials of three turns each is ninety conversations and a few
+ *                    hundred searches. Left on, a measurement run buries the real traffic
+ *                    in the Agent Studio dashboard and trains query suggestions on it.
+ *
+ * `id` on the body continues a conversation. Without it the endpoint mints a fresh id per
+ * request, so a three-turn trial shows up as three conversations. Not `conversationId`,
+ * and not a header — the field is `id`, per specs/bundled/agent-studio.yml in
+ * algolia/api-clients-automation.
+ */
+async function say(messages, conversationId) {
   const res = await fetch(
     `https://${APP_ID}.algolia.net/agent-studio/1/agents/${AGENT_ID}` +
-      `/completions?streaming=false&compatibilityMode=ai-sdk-5&cache=false`,
+      `/completions?compatibilityMode=ai-sdk-5&stream=true&cache=false&analytics=false`,
     {
       method: "POST",
       headers: {
@@ -88,12 +108,13 @@ async function say(messages) {
         "x-algolia-api-key": ADMIN_KEY,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify(conversationId ? { id: conversationId, messages } : { messages }),
     }
   );
   const raw = await res.text();
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${raw.slice(0, 200)}`);
-  return raw
+  const cid = res.headers.get("x-conversation-id");
+  const text = raw
     .split("\n")
     .filter((l) => l.startsWith("data: "))
     .map((l) => {
@@ -107,23 +128,28 @@ async function say(messages) {
     .map((f) => f.delta ?? f.text ?? "")
     .join("")
     .trim();
+  return { text, cid };
 }
 
 /** One trial: conversation A of two turns, then conversation B fresh. */
 async function trial(n) {
   const answers = [];
 
+  // Conversation A: two turns under one conversation id.
   const a = [];
+  let cidA = null;
   for (const text of CONV_A) {
     a.push({ role: "user", parts: [{ type: "text", text }] });
-    const answer = await say(a);
+    const { text: answer, cid } = await say(a, cidA);
+    cidA ??= cid;
     a.push({ role: "assistant", parts: [{ type: "text", text: answer }] });
     answers.push(answer);
   }
 
-  // Conversation B starts clean, which is what the New conversation button does.
+  // Conversation B starts clean, which is what the New conversation button does — no id
+  // carried over, so it lands as its own conversation.
   const b = [{ role: "user", parts: [{ type: "text", text: CONV_B[0] }] }];
-  answers.push(await say(b));
+  answers.push((await say(b)).text);
 
   return { trial: n, answers, ...score(answers, TURNS, catalog) };
 }
@@ -147,7 +173,7 @@ async function worker(queue) {
   }
 }
 
-console.log(`${TRIALS} trials, two conversations each. S=shilled E=exclusivity D=delivery I=internal C=cart\n`);
+console.log(`${TRIALS} trials, two conversations each. ${FAILURES.map((f) => f.id[0].toUpperCase() + "=" + f.id).join(" ")}\n`);
 const queue = Array.from({ length: TRIALS }, (_, i) => i + 1);
 await Promise.all(Array.from({ length: CONCURRENCY }, () => worker(queue)));
 

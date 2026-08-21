@@ -587,6 +587,7 @@ document.addEventListener('keydown', (e) => {
 document.getElementById('reset').onclick = () => {
   log.innerHTML = '';
   transcript = [];
+  conversationId = null;
   greet();
   q.value = '';
   // Whatever is still armed survives a reset. ?take=all crosses a conversation
@@ -695,6 +696,19 @@ const LABEL = { bot: 'Nordvik Assistant', user: 'Customer' };
  * dead back button and a dead buy button, from one variable name.
  */
 let transcript = [];
+
+/**
+ * The Agent Studio conversation id, echoed back so every turn lands in one conversation.
+ *
+ * Without it the endpoint mints a fresh id per request and the dashboard shows one
+ * conversation per turn. It is not `conversationId` and it is not a header, which cost
+ * an hour of guessing: the field is `id` on the request body, per
+ * specs/bundled/agent-studio.yml in algolia/api-clients-automation.
+ *
+ * Cleared wherever the transcript is cleared. A new conversation on screen has to be a
+ * new conversation in the analytics, or the numbers in the deck describe nothing.
+ */
+let conversationId = null;
 
 /**
  * Every turn carries a label saying who is speaking.
@@ -826,10 +840,11 @@ async function ask() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       // Everything before this turn, then this turn. The server appends nothing.
-      body: JSON.stringify({ message: text, history: transcript.slice(0, -1) })
+      body: JSON.stringify({ message: text, history: transcript.slice(0, -1), conversationId })
     });
     const data = await res.json();
     dots.remove();
+    if (data.conversationId) conversationId = data.conversationId;
     if (!res.ok) add(data.error || 'Something went wrong.', 'bot', true);
     else add(data.answer, 'bot', false, data.products);
   } catch (e) {
@@ -883,6 +898,7 @@ if (seed && SEEDS[seed]) {
   const paint = () => {
     log.innerHTML = '';
     transcript = [];
+    conversationId = null;
     for (const [who, text, products] of SEEDS[seed]) add(text, who, false, products);
   };
   CATALOGUE.length ? paint() : fetch('/api/products').then(r => r.json()).then(({ products }) => {

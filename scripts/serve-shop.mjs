@@ -237,11 +237,12 @@ const server = createServer(async (req, res) => {
     let body = "";
     for await (const chunk of req) body += chunk;
 
-    let message, history;
+    let message, history, conversationId;
     try {
       const parsed = JSON.parse(body);
       message = parsed.message;
       history = Array.isArray(parsed.history) ? parsed.history : [];
+      conversationId = typeof parsed.conversationId === "string" ? parsed.conversationId : null;
     } catch {
       return json(res, 400, { error: "Bad request body." });
     }
@@ -257,11 +258,17 @@ const server = createServer(async (req, res) => {
       { role: "user", parts: [{ type: "text", text: message }] },
     ];
 
+    // stream=true and an SSE parser, said explicitly. The param is `stream`, not
+    // `streaming` — this code sent `streaming=false` for months, the endpoint ignored an
+    // unknown param, applied its own default of true, and the SSE parser below worked by
+    // luck. Passing the documented `stream=false` returns application/json instead and
+    // would have parsed to nothing.
+    //
     // cache=false so what the audience sees is what the agent just decided, not a
     // response cached before the fix was applied.
     const url =
       `https://${APP_ID}.algolia.net/agent-studio/1/agents/${id}` +
-      `/completions?streaming=false&compatibilityMode=ai-sdk-5&cache=false`;
+      `/completions?compatibilityMode=ai-sdk-5&stream=true&cache=false`;
 
     try {
       const upstream = await fetch(url, {
@@ -271,10 +278,13 @@ const server = createServer(async (req, res) => {
           "x-algolia-api-key": API_KEY,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ messages }),
+        // `id` continues an existing conversation. Omitted on the first turn, when the
+        // endpoint mints one and returns it in the x-conversation-id response header.
+        body: JSON.stringify(conversationId ? { id: conversationId, messages } : { messages }),
       });
 
       const raw = await upstream.text();
+      const cid = upstream.headers.get("x-conversation-id") ?? conversationId;
       if (!upstream.ok) {
         console.error(`Agent error ${upstream.status}: ${raw.slice(0, 400)}`);
         return json(res, 502, { error: `Assistant unavailable (${upstream.status}).` });
@@ -286,7 +296,7 @@ const server = createServer(async (req, res) => {
         const fallback =
           violation.fallbackResponse || "I cannot provide this response.";
         console.log(`\nQ: ${message}\nBLOCKED by guardrail [${violation.category ?? "?"}]\nA: ${fallback}\n`);
-        return json(res, 200, { answer: fallback, blocked: true, category: violation.category });
+        return json(res, 200, { answer: fallback, blocked: true, category: violation.category, conversationId: cid });
       }
 
       if (!text) {
@@ -298,7 +308,7 @@ const server = createServer(async (req, res) => {
       const products = namedProducts(text, hits);
       console.log(`\nQ: ${message}   [turn ${messages.length}]\nA: ${text.replace(/\n/g, "\n   ")}`);
       console.log(`   retrieved ${hits.length}, carded ${products.length}${products.length ? ": " + products.join(", ") : ""}\n`);
-      return json(res, 200, { answer: text, products });
+      return json(res, 200, { answer: text, products, conversationId: cid });
     } catch (err) {
       console.error(err);
       return json(res, 502, { error: "Could not reach the assistant." });

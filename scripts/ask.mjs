@@ -40,8 +40,11 @@ export async function ask(question) {
   const url =
     `https://${APP_ID}.algolia.net/agent-studio/1/agents/${AGENT_ID}` +
     // cache=false is not optional here. Agent Studio caches completions by default,
-  // and a probe that reads a cached answer is not testing anything.
-  `/completions?streaming=false&compatibilityMode=ai-sdk-5&cache=false`;
+    // and a probe that reads a cached answer is not testing anything. analytics=false
+    // keeps probe traffic out of the dashboards and out of query-suggestions training.
+    // And the param is `stream`, not `streaming`: the old spelling was silently ignored,
+    // the endpoint streamed anyway, and the SSE parser below worked by luck.
+    `/completions?compatibilityMode=ai-sdk-5&stream=true&cache=false&analytics=false`;
 
   const res = await fetch(url, {
     method: "POST",
@@ -58,7 +61,7 @@ export async function ask(question) {
   const raw = await res.text();
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${raw.slice(0, 300)}`);
 
-  // Agent Studio answers in AI SDK stream frames even with streaming=false.
+  // Agent Studio answers in AI SDK stream frames.
   const frames = raw
     .split("\n")
     .filter((l) => l.startsWith("data: "))
