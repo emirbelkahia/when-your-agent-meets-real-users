@@ -111,7 +111,7 @@ const html = `<!doctype html>
     color: var(--title);
     margin: 0 0 12px;
   }
-  .sub { font-size: 21px; color: var(--muted); margin: 0 0 40px; max-width: 1180px; line-height: 1.45; }
+  .sub { font-size: 21px; color: var(--muted); margin: 0 0 30px; max-width: 1180px; line-height: 1.45; }
   .sub b { font-weight: 600; color: var(--ink); }
   table { width: 100%; border-collapse: collapse; }
   thead th {
@@ -125,12 +125,12 @@ const html = `<!doctype html>
     border-bottom: 2px solid var(--line);
   }
   thead th.count, thead th.bar { text-align: right; }
-  tbody td { padding: 20px 0; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  tbody td { padding: 13px 0; border-bottom: 1px solid var(--line); vertical-align: middle; }
   tbody tr:last-child td { border-bottom: none; }
   .what { padding-right: 40px; }
-  .label { display: block; font-size: 23px; font-weight: 600; color: var(--ink); }
-  .note { display: block; font-size: 16px; color: var(--muted); margin-top: 4px; }
-  .cause { width: 232px; }
+  .label { display: block; font-size: 21px; font-weight: 600; color: var(--ink); }
+  .note { display: block; font-size: 15px; color: var(--muted); margin-top: 4px; }
+  .cause { width: 208px; }
   .chip {
     display: inline-block;
     font-size: 14px;
@@ -151,8 +151,8 @@ const html = `<!doctype html>
     font-size: 19px;
     color: var(--muted);
   }
-  .bar { width: 400px; }
-  .track { display: inline-block; width: 300px; height: 14px; border-radius: 999px; background: #F1F1F6; vertical-align: middle; overflow: hidden; }
+  .bar { width: 360px; }
+  .track { display: inline-block; width: 262px; height: 14px; border-radius: 999px; background: #F1F1F6; vertical-align: middle; overflow: hidden; }
   .fill { height: 100%; border-radius: 999px; }
   .fill.poison { background: var(--poison); }
   .fill.scope  { background: var(--scope); }
@@ -168,7 +168,7 @@ const html = `<!doctype html>
     color: var(--ink);
     vertical-align: middle;
   }
-  .foot { margin-top: auto; padding-top: 32px; padding-right: 140px; border-top: 2px solid var(--line); font-size: 20px; color: var(--ink); line-height: 1.5; }
+  .foot { margin-top: auto; padding-top: 26px; padding-right: 140px; border-top: 2px solid var(--line); font-size: 20px; color: var(--ink); line-height: 1.5; }
   .foot b { font-weight: 600; }
 </style>
 </head>
