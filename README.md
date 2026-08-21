@@ -97,6 +97,7 @@ click you would have to trim:
 |---|---|
 | `?chat=open` | panel open, corner size |
 | `?chat=big` | panel open at presentation size, storefront dimmed behind |
+| `?product=<objectID>` | deep-links to a product page, e.g. `?product=nvk-mp-rvn-lantern`. Clicking a card in the grid does the same |
 | `?seed=coldopen` | pre-fills the cold-open exchange from the verbatim transcripts — a deterministic frame for checking type size and cropping before a take |
 | `?take=1` | the recommendation question |
 | `?take=2` | the follow-up that claims a cart write |

@@ -78,14 +78,61 @@
   .row { display: flex; align-items: baseline; gap: 9px; margin-top: 7px; }
   .price { font-weight: 650; font-size: 15px; }
   .rate { color: var(--muted); font-size: 12.5px; }
-  .sellercopy {
-    margin-top: 9px; padding: 9px 10px; background: var(--soft); border-radius: 7px;
-    font-size: 11.5px; line-height: 1.45; color: var(--muted);
+
+  /* Product detail page.
+     A wall of seller copy inside a grid card is not a pattern anyone ships, and it
+     made the poisoned text unreadable. The PDP renders it at a proper measure, and
+     puts the shop's own spec next to the seller's description under separate
+     headings — which is how a marketplace labels seller-supplied content anyway,
+     and it makes the authorship split visible without editorialising. */
+  .breadcrumb {
+    font-size: 13px; color: var(--muted); margin-bottom: 22px; display: flex; gap: 7px;
   }
-  .sellercopy span {
-    display: block; text-transform: uppercase; letter-spacing: .04em; font-size: 9.5px;
-    font-weight: 650; color: #8b96a2; margin-bottom: 3px;
+  .breadcrumb a { color: var(--accent); text-decoration: none; cursor: pointer; font-weight: 550; }
+  .breadcrumb a:hover { text-decoration: underline; }
+
+  .pdp-top { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap: 52px; align-items: start; }
+  @media (max-width: 900px) { .pdp-top { grid-template-columns: 1fr; gap: 28px; } }
+
+  .pdp-media {
+    background: var(--soft); border: 1px solid var(--line); border-radius: 12px;
+    aspect-ratio: 4 / 3; overflow: hidden; position: relative;
   }
+  .pdp-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pdp-media .flag { top: 14px; left: 14px; }
+
+  .pdp-buy h1 { font-size: 27px; line-height: 1.2; margin: 0 0 8px; }
+  .pdp-sold { font-size: 14px; color: var(--muted); margin-bottom: 4px; }
+  .pdp-sold b { color: var(--ink); font-weight: 600; }
+  .pdp-rate { font-size: 13.5px; color: var(--muted); margin-bottom: 20px; }
+  .pdp-price { font-size: 30px; font-weight: 700; letter-spacing: -.02em; margin-bottom: 4px; }
+  .pdp-vat { font-size: 12.5px; color: var(--muted); margin-bottom: 20px; }
+  .pdp-stock { font-size: 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 7px; }
+  .pdp-stock .dot { background: #2ea36b; }
+  .pdp-stock.out { color: var(--warn); }
+  .pdp-stock.out .dot { background: #c9873f; }
+  .pdp-cta {
+    width: 100%; border: 0; background: var(--accent); color: #fff; font: inherit;
+    font-size: 16px; font-weight: 600; padding: 15px; border-radius: 9px; cursor: pointer;
+  }
+  .pdp-cta:hover { background: #17503f; }
+  .pdp-cta.done { background: var(--soft); color: var(--accent); box-shadow: inset 0 0 0 1px var(--line); }
+  .pdp-ship {
+    margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line);
+    font-size: 13px; color: var(--muted); line-height: 1.65;
+  }
+  .pdp-ship b { color: var(--ink); font-weight: 600; }
+
+  .pdp-sections { margin-top: 54px; display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 44px; max-width: 1000px; }
+  .pdp-block h2 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: #8b96a2;
+    margin: 0 0 4px; font-weight: 650;
+  }
+  .pdp-block .byline { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; }
+  .pdp-block p { font-size: 15px; line-height: 1.7; margin: 0 0 12px; }
+  .pdp-specs { list-style: none; padding: 0; margin: 0; font-size: 14.5px; line-height: 1.9; }
+  .pdp-specs li { display: flex; gap: 10px; border-bottom: 1px solid var(--line); padding: 4px 0; }
+  .pdp-specs li span:first-child { color: var(--muted); flex: 0 0 44%; }
 
   /* Chat widget */
   /* The launcher shows the assistant rather than a generic speech glyph: a face and
@@ -238,9 +285,12 @@
 </header>
 
 <main>
-  <h1>Camping</h1>
-  <div class="count" id="count">Loading…</div>
-  <div class="grid" id="grid"></div>
+  <section id="catalog">
+    <h1>Camping</h1>
+    <div class="count" id="count">Loading…</div>
+    <div class="grid" id="grid"></div>
+  </section>
+  <section id="pdp" hidden></section>
 </main>
 
 <button id="bubble" aria-label="Open the assistant">
@@ -357,25 +407,123 @@ function imageFallback(img) {
   img.replaceWith(div);
 }
 
+const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+/** Turn a run of text into paragraphs without reflowing the words. */
+const paras = (t) =>
+  String(t ?? '')
+    .split(/\n{2,}/)
+    .map((x) => x.replace(/\s*\n\s*/g, ' ').trim())
+    .filter(Boolean)
+    .map((x) => `<p>${esc(x)}</p>`)
+    .join('');
+
+let CATALOGUE = [];
+const catalogEl = document.getElementById('catalog');
+const pdpEl = document.getElementById('pdp');
+
 fetch('/api/products').then(r => r.json()).then(({ products }) => {
+  CATALOGUE = products;
   document.getElementById('count').textContent = products.length + ' products';
   document.getElementById('grid').innerHTML = products.map(p => `
-    <article class="card">
+    <article class="card" data-id="${p.objectID}">
       <div class="thumb">
-        <img src="/images/${p.objectID}.jpg" alt="${p.name}" loading="eager"
+        <img src="/images/${p.objectID}.jpg" alt="${esc(p.name)}" loading="eager"
              data-remote="${p.image_url || ''}" onerror="imageFallback(this)">
         ${p.seller_type === 'third_party' ? '<span class="flag">Marketplace</span>' : ''}
         ${p.in_stock ? '' : '<div class="oos">Out of stock</div>'}
       </div>
-      <div class="name">${p.name}</div>
-      <div class="seller">${p.seller_type === 'third_party' ? 'Sold by ' + p.seller_name : p.brand}</div>
+      <div class="name">${esc(p.name)}</div>
+      <div class="seller">${p.seller_type === 'third_party' ? 'Sold by ' + esc(p.seller_name) : esc(p.brand)}</div>
       <div class="row">
         <span class="price">${eur(p.price_eur)}</span>
         <span class="rate">★ ${p.rating} (${p.review_count})</span>
       </div>
-      ${p.seller_type === 'third_party' && p.description ? `<div class="sellercopy"><span>Listing copy from the seller</span>${p.description}</div>` : ''}
     </article>`).join('');
+
+  // Deep link, so a take can start on the product page.
+  const wantProduct = new URLSearchParams(location.search).get('product');
+  if (wantProduct && products.some((p) => p.objectID === wantProduct)) showProduct(wantProduct, false);
 });
+
+document.getElementById('grid').addEventListener('click', (e) => {
+  const card = e.target.closest('.card');
+  if (card) showProduct(card.dataset.id);
+});
+
+/**
+ * The product page.
+ *
+ * Two headings under the buy box, and the split between them is the whole point:
+ * "Product details" is the shop's own normalised spec, "Description" is what the
+ * seller supplied. A marketplace labels seller copy anyway — this one just does it
+ * honestly, which happens to make a poisoned description easy to find.
+ */
+function showProduct(id, push = true) {
+  const p = CATALOGUE.find((x) => x.objectID === id);
+  if (!p) return;
+  const third = p.seller_type === 'third_party';
+
+  pdpEl.innerHTML = `
+    <div class="breadcrumb"><a id="back">Camping</a><span>›</span><span>${esc(p.name)}</span></div>
+    <div class="pdp-top">
+      <div class="pdp-media">
+        <img src="/images/${p.objectID}.jpg" alt="${esc(p.name)}"
+             data-remote="${p.image_url || ''}" onerror="imageFallback(this)">
+        ${third ? '<span class="flag">Marketplace</span>' : ''}
+      </div>
+      <div class="pdp-buy">
+        <h1>${esc(p.name)}</h1>
+        <div class="pdp-sold">${third ? `Sold by <b>${esc(p.seller_name)}</b>` : `<b>${esc(p.brand)}</b> · sold by Nordvik Market`}</div>
+        <div class="pdp-rate">★ ${p.rating} · ${p.review_count} reviews</div>
+        <div class="pdp-price">${eur(p.price_eur)}</div>
+        <div class="pdp-vat">VAT included</div>
+        <div class="pdp-stock ${p.in_stock ? '' : 'out'}">
+          <span class="dot"></span>
+          ${p.in_stock ? `In stock · dispatched in ${p.lead_time_days} day${p.lead_time_days === 1 ? '' : 's'}` : 'Out of stock'}
+        </div>
+        <button class="pdp-cta" id="cta" ${p.in_stock ? '' : 'disabled'}>Add to basket</button>
+        <div class="pdp-ship">
+          <b>Standard delivery</b> 3–5 working days, €4.90 · free on orders over €75<br>
+          <b>Express delivery</b> next working day, €12.50
+        </div>
+      </div>
+    </div>
+    <div class="pdp-sections">
+      <div class="pdp-block">
+        <h2>Product details</h2>
+        <div class="byline">Nordvik Market</div>
+        ${paras(p.spec)}
+        <ul class="pdp-specs">
+          <li><span>Brand</span><span>${esc(p.brand)}</span></li>
+          <li><span>Category</span><span>${esc(p.category)}</span></li>
+          <li><span>Dispatch</span><span>${p.lead_time_days} working days</span></li>
+        </ul>
+      </div>
+      <div class="pdp-block">
+        <h2>Description</h2>
+        <div class="byline">${third ? `Provided by ${esc(p.seller_name)}` : 'Nordvik Market'}</div>
+        ${paras(p.description)}
+      </div>
+    </div>`;
+
+  pdpEl.hidden = false;
+  catalogEl.hidden = true;
+  window.scrollTo(0, 0);
+  if (push) history.pushState({ product: id }, '', `?product=${encodeURIComponent(id)}`);
+
+  document.getElementById('back').onclick = () => { history.pushState({}, '', location.pathname); showCatalog(); };
+  const cta = document.getElementById('cta');
+  if (cta) cta.onclick = () => { cta.textContent = 'Added to basket'; cta.classList.add('done'); };
+}
+
+function showCatalog() {
+  pdpEl.hidden = true;
+  catalogEl.hidden = false;
+  window.scrollTo(0, 0);
+}
+
+addEventListener('popstate', (e) => (e.state?.product ? showProduct(e.state.product, false) : showCatalog()));
 
 const panel = document.getElementById('panel');
 const log = document.getElementById('log');
