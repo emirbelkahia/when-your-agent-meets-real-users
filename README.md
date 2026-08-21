@@ -97,7 +97,20 @@ click you would have to trim:
 |---|---|
 | `?chat=open` | panel open, corner size |
 | `?chat=big` | panel open at presentation size, storefront dimmed behind |
-| `?seed=coldopen` | pre-fills the cold-open exchange from the verbatim transcripts, without calling the API — a deterministic frame for checking type size and cropping before a take |
+| `?seed=coldopen` | pre-fills the cold-open exchange from the verbatim transcripts — a deterministic frame for checking type size and cropping before a take |
+| `?take=1` `?take=2` `?take=3` | arms one recorded exchange. The panel opens at presentation size and **empty**: you type or paste the question, the assistant thinks for a second or two, and answers with what the agent really said |
+| `?take=all` | the same, for all three questions in order |
+
+**What the takes are, and what they are not.** The answers are verbatim from
+`measurements/cold-open-2026-08-20.json`, trial 10 — one of the twenty conversations out of thirty
+that produced all four failures. Not a word is written by hand. The reason to use them is to avoid
+re-running a question a dozen times on camera hunting for the bad case, which produces the same
+clip and wastes takes. The typing indicator and the render are identical to the live path, so a
+filmed take does not misrepresent how the product behaves, and once the script is exhausted the
+panel goes back to the live agent.
+
+The talk says this out loud rather than hiding it: the slide after the cold open gives the rates
+over thirty runs and states that what the audience watched was one of them.
 
 Without `seed`, the panel starts empty like any chat widget. The sparkle button in the panel
 header clears the conversation and starts a new one.
