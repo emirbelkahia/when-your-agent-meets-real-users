@@ -39,6 +39,7 @@ const AGENT_ID_FILE = resolve(HERE, "../.agent-id");
 const PORT = Number(process.env.PORT || 4173);
 const APP_ID = process.env.ALGOLIA_APP_ID;
 const API_KEY = process.env.ALGOLIA_SEARCH_API_KEY || process.env.ALGOLIA_ADMIN_API_KEY;
+const INDEX_NAME = process.env.ALGOLIA_INDEX_NAME || "devcon_nordvik_catalog";
 
 if (!APP_ID || !API_KEY) {
   console.error("Missing ALGOLIA_APP_ID and a key. Copy .env.example to .env.");
@@ -48,9 +49,48 @@ if (!APP_ID || !API_KEY) {
 const catalog = JSON.parse(readFileSync(CATALOG, "utf-8"));
 const HUMAN = catalog.human_attributes;
 
-const publicProducts = catalog.records.map((r) =>
-  Object.fromEntries(Object.entries(r).filter(([k]) => HUMAN.includes(k)))
-);
+/**
+ * The storefront reads the index, not the file on disk.
+ *
+ * This started as a file read, which quietly broke the most important claim in the
+ * talk. The page showed the seller's clean copy while the agent read the poisoned
+ * version out of the index, so "that text is on the product page, in public, right
+ * now" was false in the app. It also meant a feed landing changed nothing on
+ * screen.
+ *
+ * Reading the index fixes both: poison, refresh, and the seller's text has changed
+ * on the page exactly as it changed for the agent. It is also how a real storefront
+ * works.
+ *
+ * Only the shopper-visible attributes are requested, so the internal fields never
+ * reach the browser. When the agent leaks a margin later, the page did not hand it
+ * over.
+ */
+async function fetchProducts() {
+  const res = await fetch(
+    `https://${APP_ID}-dsn.algolia.net/1/indexes/${INDEX_NAME}/query`,
+    {
+      method: "POST",
+      headers: {
+        "x-algolia-application-id": APP_ID,
+        "x-algolia-api-key": API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        params: new URLSearchParams({
+          query: "",
+          hitsPerPage: "50",
+          attributesToRetrieve: HUMAN.join(","),
+        }).toString(),
+      }),
+    }
+  );
+  if (!res.ok) throw new Error(`index query failed (${res.status}): ${await res.text()}`);
+  const { hits } = await res.json();
+  // Keep the catalogue's own order so the grid does not reshuffle between takes.
+  const order = new Map(catalog.records.map((r, i) => [r.objectID, i]));
+  return hits.sort((a, b) => (order.get(a.objectID) ?? 99) - (order.get(b.objectID) ?? 99));
+}
 
 function agentId() {
   try {
@@ -137,7 +177,12 @@ const server = createServer(async (req, res) => {
   }
 
   if (pathname === "/api/products") {
-    return json(res, 200, { shop: catalog.shop, products: publicProducts });
+    try {
+      return json(res, 200, { shop: catalog.shop, products: await fetchProducts() });
+    } catch (err) {
+      console.error(err);
+      return json(res, 502, { error: "Could not read the catalogue." });
+    }
   }
 
   if (pathname === "/api/chat" && req.method === "POST") {
