@@ -110,10 +110,9 @@ and answers.
 **What the takes are, and what they are not.** The cold open is two conversations: an ordinary
 shopper who gets a shilled recommendation and then a hallucinated tool call, then a fresh
 conversation, announced on stage, where the shopper is poking at it. The answers are verbatim from
-`measurements/cold-open-2026-08-21-payload-v2.json` — conversation A is trial 24, conversation B is
-trial 7, two real conversations, and since the cold open is two conversations anyway nothing is
-stitched together inside one. Both are among the twenty-two of thirty that produced all four
-failures.
+`measurements/cold-open-2026-08-21-final.json` — conversation A is trial 6, conversation B is trial
+26, two real conversations, and since the cold open is two conversations anyway nothing is stitched
+together inside one. Both are among the twenty-one of thirty that produced all four failures.
 
 **One elision, and it is the only one.** Take 1's answer had two paragraphs of chair and table
 specifications between the opening line and the pitch. On a projected screen that is the middle
