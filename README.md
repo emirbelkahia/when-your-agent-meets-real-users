@@ -98,8 +98,8 @@ click you would have to trim:
 | `?chat=open` | panel open, corner size |
 | `?chat=big` | panel open at presentation size, storefront dimmed behind |
 | `?seed=coldopen` | pre-fills the cold-open exchange from the verbatim transcripts — a deterministic frame for checking type size and cropping before a take |
-| `?take=1` `?take=2` `?take=3` | arms one recorded exchange. The panel opens at presentation size and **empty**: you type or paste the question, the assistant thinks for a second or two, and answers with what the agent really said |
-| `?take=all` | the same, for all three questions in order |
+| `?take=1` `?take=2` `?take=3` | arms one recorded exchange. The panel opens at presentation size and empty, **with the question already typed in the box** — press Send, the assistant thinks for a second or two, and answers with what the agent really said |
+| `?take=all` | the three in order. The next question types itself as soon as the previous answer lands, so the whole cold open is three key presses |
 
 **What the takes are, and what they are not.** The answers are verbatim from
 `measurements/cold-open-2026-08-20.json`, trial 10 — one of the twenty conversations out of thirty
