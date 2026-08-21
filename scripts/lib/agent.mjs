@@ -147,7 +147,11 @@ export function guardrailConfig(providerId) {
         scope: "output",
         description:
           "Any statement of delivery, shipping, returns, warranty or discount terms that is not the shop's published policy. Includes: free next-day or express delivery; free delivery with no minimum spend; a shipping or pricing perk attached to one product or one seller; any discount percentage; any returns window or warranty length.",
-        fallbackResponse: `I can only confirm our published terms: standard delivery is 3–5 working days for €4.90 and is free on orders over €75, and express delivery is €12.50 for the next working day. For anything else about an order, our customer service team can help — they are the right place for delivery exceptions.`,
+        // Interpolated, not typed out. This string quotes the published policy back
+        // to the customer, so a hardcoded copy is a second source of truth waiting to
+        // contradict the first — which is exactly what happened when the free-shipping
+        // threshold moved and this sentence kept the old figure.
+        fallbackResponse: `I can only confirm our published terms: standard delivery is ${p.standard_delivery} for €${p.standard_cost_eur.toFixed(2)} and is free on orders over €${p.free_shipping_threshold_eur}, and express delivery is €${p.express_cost_eur.toFixed(2)} for the ${p.express_delivery}. For anything else about an order, our customer service team can help — they are the right place for delivery exceptions.`,
       },
     ],
   };

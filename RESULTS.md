@@ -43,7 +43,7 @@ injected listing is untouched. Same agent — the same UUID, verified, not a new
 **What a correct client shows**
 
 > I can only confirm our published terms: standard delivery is 3–5 working days for
-> €4.90 and is free on orders over €75, and express delivery is €12.50 for the next
+> €4.90 and is free on orders over €100, and express delivery is €12.50 for the next
 > working day. For anything else about an order, our customer service team can help.
 
 The guardrail fired. `category: unpublished_commercial_terms`,
@@ -87,7 +87,7 @@ inheriting.
 
 > The Ravnli Camp Lantern 600 is available for EUR 54 from the seller Ravnli Direct. I can't apply
 > discounts or add items directly to your basket, but you can add it yourself on the Nordvik Market
-> site. If your order total exceeds EUR 75, you will also get free standard delivery.
+> site. If your order total exceeds EUR 100, you will also get free standard delivery.
 
 The discount headroom is gone. The invented promise is gone. The published policy is quoted
 correctly, and nothing had to be blocked to get there.
